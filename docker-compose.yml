@@ -33,7 +33,6 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      # Ojo aquí: cambiamos 'postgres' por la variable para que el chequeo de salud no falle
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
       retries: 10
