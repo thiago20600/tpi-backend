@@ -1,0 +1,37 @@
+{
+  "realm": "tpi",
+  "enabled": true,
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "TURISTA" },
+      { "name": "PRESTADOR" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "tpi-cliente",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": ["*"],
+      "webOrigins": ["*"]
+    }
+  ],
+  "users": [
+    {
+      "username": "prestador1",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "prestador1", "temporary": false }],
+      "realmRoles": ["PRESTADOR"]
+    },
+    {
+      "username": "turista1",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "turista1", "temporary": false }],
+      "realmRoles": ["TURISTA"]
+    }
+  ]
+}
