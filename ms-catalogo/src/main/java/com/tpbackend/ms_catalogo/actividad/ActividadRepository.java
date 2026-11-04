@@ -1,5 +1,10 @@
 package com.tpbackend.ms_catalogo.actividad;
 
-public class ActividadRepository {
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ActividadRepository extends JpaRepository<Actividad, UUID> {
+    
 
 }
