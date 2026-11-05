@@ -7,6 +7,8 @@ import org.springframework.web.server.ResponseStatusException;
 import com.tpbackend.ms_catalogo.actividad.dto.ActividadCreateDTO;
 import com.tpbackend.ms_catalogo.actividad.dto.ActividadResponseDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service 
 @RequiredArgsConstructor 
@@ -32,6 +34,11 @@ public class ActividadService {
         Actividad actividadGuardada = actividadRepository.save(actividad);
 
         return mapToResponse(actividadGuardada);
+    }
+
+    public Page<ActividadResponseDTO> listarActividades(Pageable pageable){
+        Page<Actividad> actividades = actividadRepository.findAll(pageable);
+        return actividades.map(this::mapToResponse);
     }
 
 
