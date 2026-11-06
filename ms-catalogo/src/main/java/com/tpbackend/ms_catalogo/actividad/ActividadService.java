@@ -29,13 +29,14 @@ public class ActividadService {
         }
 
         Actividad actividad = Actividad.builder()
-                                        .nombre(actividadCreate.getNombre())
-                                        .descripcion(actividadCreate.getDescripcion())
-                                        .latitud(actividadCreate.getLatitud())
-                                        .longitud(actividadCreate.getLongitud())
-                                        .prestadorSub(prestadorSub)
-                                        .build();
-        
+                .nombre(actividadCreate.getNombre())
+                .descripcion(actividadCreate.getDescripcion())
+                .latitud(actividadCreate.getLatitud())
+                .longitud(actividadCreate.getLongitud())
+                .limiteRafagasKmh(actividadCreate.getLimiteRafagasKmh())
+                .prestadorSub(prestadorSub)
+                .build();
+                
         Actividad actividadGuardada = actividadRepository.save(actividad);
 
         return mapToResponse(actividadGuardada);
