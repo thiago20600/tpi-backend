@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.UUID;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -53,7 +54,7 @@ public class ActividadController {
         @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @GetMapping 
-    public ResponseEntity<Page<ActividadResponseDTO>> listar(Pageable pageable) {  
+    public ResponseEntity<Page<ActividadResponseDTO>> listar(@ParameterObject Pageable pageable) {  
         
         Page<ActividadResponseDTO> resultado = actividadService.listarActividades(pageable);
         return ResponseEntity.ok(resultado);
