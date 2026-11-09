@@ -13,6 +13,7 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
       KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME: keycloak
     ports:
       - "8080:8080"
     volumes:
@@ -48,6 +49,9 @@ services:
       - CATALOGO_DB_USER=${CATALOGO_DB_USER}
       - CATALOGO_DB_PASSWORD=${CATALOGO_DB_PASSWORD}
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
+    #temporal para pruebas con swagger
+    ports:
+      - "8081:8081" 
     depends_on:
       postgres-catalogo:
         condition: service_healthy

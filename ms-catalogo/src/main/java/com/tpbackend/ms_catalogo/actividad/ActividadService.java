@@ -1,9 +1,7 @@
 package com.tpbackend.ms_catalogo.actividad;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.stereotype.Service;
 import com.tpbackend.BusinessException;
 import com.tpbackend.ms_catalogo.actividad.dto.ActividadCreateDTO;
 import com.tpbackend.ms_catalogo.actividad.dto.ActividadResponseDTO;
