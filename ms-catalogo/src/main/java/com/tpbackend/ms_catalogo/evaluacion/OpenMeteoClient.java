@@ -13,7 +13,7 @@ public class OpenMeteoClient {
 
     public OpenMeteoResponseDTO obtenerRafagas(Double latitud, Double longitud) {
         return openMeteoRestClient.get()
-                .uri("/v1/forecast?latitude={lat}&longitude={lon}&hourly=wind_gusts_10m&timezone=UTC", latitud, longitud)
+                .uri("/forecast?latitude={lat}&longitude={lon}&hourly=wind_gusts_10m&timezone=UTC", latitud, longitud)
                 .retrieve()
                 .body(OpenMeteoResponseDTO.class);
     }
