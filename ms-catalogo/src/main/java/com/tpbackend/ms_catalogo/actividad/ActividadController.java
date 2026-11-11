@@ -25,6 +25,9 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.tpbackend.ms_catalogo.evaluacion.EvaluacionService;
+import com.tpbackend.ms_catalogo.evaluacion.dto.EvaluacionResponseDTO;
+
 @RestController 
 @RequestMapping("/api/v1/actividades")
 @RequiredArgsConstructor 
@@ -32,6 +35,7 @@ import org.springframework.data.domain.Pageable;
 public class ActividadController {
 
     private final ActividadService actividadService;
+    private final EvaluacionService evaluacionService;
 
 
     @Operation(summary = "Crear actividad", description = "Crea una nueva actividad en el catálogo")
@@ -73,5 +77,16 @@ public class ActividadController {
         return ResponseEntity.ok(response);
     }
 
-
+    @Operation(summary = "Evaluar viento", description = "Evalúa el viento de una actividad")
+    @ApiResponses(value = {
+    @ApiResponse(responseCode = "200", description = "Evaluación exitosa"),
+    @ApiResponse(responseCode = "403", description = "No tenés permiso"),
+    @ApiResponse(responseCode = "404", description = "Actividad no encontrada")
+    })
+    @PostMapping("/{id}/evaluaciones-viento")
+    public ResponseEntity<EvaluacionResponseDTO> evaluarViento(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        String prestadorSub = jwt.getSubject();
+        EvaluacionResponseDTO response = evaluacionService.evaluar(id, prestadorSub);
+        return ResponseEntity.ok(response);
+    }
 }
