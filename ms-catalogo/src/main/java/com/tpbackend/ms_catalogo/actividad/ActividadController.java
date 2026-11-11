@@ -26,19 +26,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.tpbackend.ms_catalogo.evaluacion.EvaluacionService;
+import com.tpbackend.ms_catalogo.evaluacion.dto.EvaluacionRequestDTO;
 import com.tpbackend.ms_catalogo.evaluacion.dto.EvaluacionResponseDTO;
 
 @RestController 
 @RequestMapping("/api/v1/actividades")
 @RequiredArgsConstructor 
-@Tag(name = "Actividades", description = "Gestión de actividades del catálogo")
+@Tag(name = "Actividades", description = "Gestion de actividades del catalogo")
 public class ActividadController {
 
     private final ActividadService actividadService;
     private final EvaluacionService evaluacionService;
 
 
-    @Operation(summary = "Crear actividad", description = "Crea una nueva actividad en el catálogo")
+    @Operation(summary = "Crear actividad", description = "Crea una nueva actividad")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Actividad creada"),
         @ApiResponse(responseCode = "400", description = "Datos inválidos"),
@@ -52,7 +53,7 @@ public class ActividadController {
     }
 
 
-    @Operation(summary = "Listar actividades", description = "Lista todas las actividades (paginado)")
+    @Operation(summary = "Listar actividades", description = "Lista todas las actividades")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Listado exitoso"),
         @ApiResponse(responseCode = "401", description = "No autenticado")
@@ -77,16 +78,18 @@ public class ActividadController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Evaluar viento", description = "Evalúa el viento de una actividad")
+    @Operation(summary = "Evaluar viento", description = "Evalua el viento de una actividad en un intervalo")
     @ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Evaluación exitosa"),
-    @ApiResponse(responseCode = "403", description = "No tenés permiso"),
-    @ApiResponse(responseCode = "404", description = "Actividad no encontrada")
+        @ApiResponse(responseCode = "200", description = "Evaluacion exitosa"),
+        @ApiResponse(responseCode = "400", description = "Intervalo invalido"),
+        @ApiResponse(responseCode = "403", description = "No tenes permiso"),
+        @ApiResponse(responseCode = "404", description = "Actividad no encontrada"),
+        @ApiResponse(responseCode = "503", description = "Open-Meteo no disponible")
     })
     @PostMapping("/{id}/evaluaciones-viento")
-    public ResponseEntity<EvaluacionResponseDTO> evaluarViento(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<EvaluacionResponseDTO> evaluarViento(@PathVariable UUID id, @Valid @RequestBody EvaluacionRequestDTO request, @AuthenticationPrincipal Jwt jwt) {
         String prestadorSub = jwt.getSubject();
-        EvaluacionResponseDTO response = evaluacionService.evaluar(id, prestadorSub);
+        EvaluacionResponseDTO response = evaluacionService.evaluar(id, request, prestadorSub);
         return ResponseEntity.ok(response);
     }
 }

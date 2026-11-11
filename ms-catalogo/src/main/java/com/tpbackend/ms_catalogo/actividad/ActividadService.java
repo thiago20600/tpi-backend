@@ -19,9 +19,7 @@ public class ActividadService {
 
     public ActividadResponseDTO crearActividad(ActividadCreateDTO actividadCreate, String prestadorSub){
 
-        if (prestadorSub == null || prestadorSub.isBlank()) {
-            throw new BusinessException("El prestador no está autenticado", 401);
-        }
+
         if (actividadCreate.getLimiteRafagasKmh() <= 0){
             throw new BusinessException("El limite debe ser mayor a 0", 400);
         }
