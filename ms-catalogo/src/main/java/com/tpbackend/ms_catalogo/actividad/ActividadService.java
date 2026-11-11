@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 import com.tpbackend.BusinessException;
 import com.tpbackend.ms_catalogo.actividad.dto.ActividadCreateDTO;
 import com.tpbackend.ms_catalogo.actividad.dto.ActividadResponseDTO;
+import com.tpbackend.ms_catalogo.exception.ActividadNoEncontradaException;
+import com.tpbackend.ms_catalogo.exception.LimiteRafagasInvalidoException;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,15 +16,12 @@ import java.util.UUID;
 @Service 
 @RequiredArgsConstructor 
 public class ActividadService {
-    
+
     private final ActividadRepository actividadRepository;
-    
 
-    public ActividadResponseDTO crearActividad(ActividadCreateDTO actividadCreate, String prestadorSub){
-
-
-        if (actividadCreate.getLimiteRafagasKmh() <= 0){
-            throw new BusinessException("El limite debe ser mayor a 0", 400);
+    public ActividadResponseDTO crearActividad(ActividadCreateDTO actividadCreate, String prestadorSub) {
+        if (actividadCreate.getLimiteRafagasKmh() <= 0) {
+            throw new LimiteRafagasInvalidoException();
         }
 
         Actividad actividad = Actividad.builder()
@@ -32,13 +32,12 @@ public class ActividadService {
                 .limiteRafagasKmh(actividadCreate.getLimiteRafagasKmh())
                 .prestadorSub(prestadorSub)
                 .build();
-                
-        Actividad actividadGuardada = actividadRepository.save(actividad);
 
+        Actividad actividadGuardada = actividadRepository.save(actividad);
         return mapToResponse(actividadGuardada);
     }
 
-    public Page<ActividadResponseDTO> listarActividades(Pageable pageable){
+    public Page<ActividadResponseDTO> listarActividades(Pageable pageable) {
         Page<Actividad> actividades = actividadRepository.findAll(pageable);
         return actividades.map(this::mapToResponse);
     }
@@ -46,9 +45,8 @@ public class ActividadService {
     public ActividadResponseDTO obtenerPorId(UUID id) {
         return actividadRepository.findById(id)
                 .map(this::mapToResponse)
-                .orElseThrow(() -> new BusinessException("Actividad no encontrada: " + id, 404));
+                .orElseThrow(() -> new ActividadNoEncontradaException(id));
     }
-
 
     private ActividadResponseDTO mapToResponse(Actividad actividad) {
         ActividadResponseDTO response = new ActividadResponseDTO();
@@ -61,5 +59,6 @@ public class ActividadService {
         response.setPrestadorSub(actividad.getPrestadorSub());
         return response;
     }
+
 
 }
