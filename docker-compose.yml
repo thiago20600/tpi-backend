@@ -52,6 +52,8 @@ services:
     #temporal para pruebas con swagger
     ports:
       - "8081:8081" 
+    volumes:
+      - ./logs/catalogo:/app/logs
     depends_on:
       postgres-catalogo:
         condition: service_healthy
