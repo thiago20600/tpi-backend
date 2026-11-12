@@ -49,9 +49,7 @@ services:
       - CATALOGO_DB_USER=${CATALOGO_DB_USER}
       - CATALOGO_DB_PASSWORD=${CATALOGO_DB_PASSWORD}
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
-    #temporal para pruebas con swagger
-    ports:
-      - "8081:8081" 
+      - OPENMETEO_BASE_URL=${OPENMETEO_BASE_URL}
     volumes:
       - ./logs/catalogo:/app/logs
     depends_on:
@@ -120,6 +118,22 @@ services:
       - red-logs
     depends_on:
       - loki
+    
+  api-gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
+      - CATALOGO_SERVICE_URL=http://ms-catalogo:8081
+      - SALIDAS_SERVICE_URL=http://ms-salidas-reservas:8082
+    ports:
+      - "8081:8080"
+    depends_on:
+      - ms-catalogo
+    networks:
+      - red-aplicacion
 
 
     
