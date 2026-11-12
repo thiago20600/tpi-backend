@@ -1,10 +1,65 @@
 package com.tpbackend.ms_salidas_y_reservas.reservas;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
 
-@Controller 
-@RequestMapping 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.tpbackend.ms_salidas_y_reservas.reservas.dto.ReservaCreateDTO;
+import com.tpbackend.ms_salidas_y_reservas.reservas.dto.ReservaResponseDTO;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/reservas")
+@RequiredArgsConstructor
 public class ReservaController {
 
+    private final ReservaService reservaService;
+
+    @PostMapping
+    public ResponseEntity<ReservaResponseDTO> crear(@Valid @RequestBody ReservaCreateDTO dto, @AuthenticationPrincipal Jwt jwt) {
+        String titularSub = jwt.getSubject();
+        ReservaResponseDTO response = reservaService.crear(dto, titularSub);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ReservaResponseDTO>> listarReservas(@AuthenticationPrincipal Jwt jwt) {
+        String sub = jwt.getSubject();
+        List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
+
+        List<ReservaResponseDTO> response;
+        if (roles.contains("PRESTADOR")) {
+            response = reservaService.listarPorPrestador(sub);
+        } else {
+            response = reservaService.listarPorTitular(sub);
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/cancelacion")
+    public ResponseEntity<ReservaResponseDTO> cancelar(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt) {
+        String titularSub = jwt.getSubject();
+        ReservaResponseDTO response = reservaService.cancelar(id, titularSub);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/confirmacion")
+    public ResponseEntity<ReservaResponseDTO> confirmar(@PathVariable UUID id) {
+        ReservaResponseDTO response = reservaService.confirmar(id);
+        return ResponseEntity.ok(response);
+    }
 }

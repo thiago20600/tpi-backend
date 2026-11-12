@@ -11,5 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface ReservaRepository extends JpaRepository<Reserva, UUID>{
 
     List<Reserva> findByTitularSub(String titularSub);
+    List<Reserva> findBySalidaIdIn(List<UUID> salidaIds);
 
 }
