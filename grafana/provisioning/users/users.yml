@@ -1,0 +1,13 @@
+apiVersion: 1
+
+
+users:
+  - name: dev
+    login: dev
+    password: dev
+    role: Viewer
+    
+  - name: devops
+    login: devops
+    password: devops
+    role: Editor
