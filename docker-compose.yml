@@ -135,6 +135,42 @@ services:
     networks:
       - red-aplicacion
 
+  ms-salidas-y-reservas:
+    build:
+      context: ./ms-salidas-y-reservas
+      dockerfile: Dockerfile
+    container_name: ms-salidas-y-reservas
+    environment:
+      - SALIDAS_DB_URL=${SALIDAS_DB_URL}
+      - SALIDAS_DB_USER=${SALIDAS_DB_USER}
+      - SALIDAS_DB_PASSWORD=${SALIDAS_DB_PASSWORD}
+      - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
+    volumes:
+      - ./logs/salidas:/app/logs
+    depends_on:
+      postgres-salidas:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - red-aplicacion
+      - red-datos
+
+  postgres-salidas:
+    image: postgres:16-alpine
+    container_name: postgres-salidas
+    environment:
+      POSTGRES_USER: ${SALIDAS_DB_USER}
+      POSTGRES_PASSWORD: ${SALIDAS_DB_PASSWORD}
+      POSTGRES_DB: ${SALIDAS_DB_NAME}
+    volumes:
+      - pgdata-salidas:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SALIDAS_DB_USER} -d ${SALIDAS_DB_NAME}"]
+      interval: 5s
+      retries: 10
+    networks:
+      - red-datos
 
     
 
@@ -143,6 +179,7 @@ volumes:
   pgdata-catalogo:
   loki-data:
   grafana-data:
+  pgdata-salidas:
 
 networks:
   red-datos:

@@ -1,6 +1,5 @@
 package com.tpbackend.ms_salidas_y_reservas.reservas;
 
-
 import com.tpbackend.ms_salidas_y_reservas.exception.PropiedadNoAutorizadaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.ReservaFinalizadaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.ReservaNoEncontradaException;
@@ -9,8 +8,11 @@ import com.tpbackend.ms_salidas_y_reservas.reservas.dto.ReservaResponseDTO;
 import com.tpbackend.ms_salidas_y_reservas.salidas.EstadoSalida;
 import com.tpbackend.ms_salidas_y_reservas.salidas.Salida;
 import com.tpbackend.ms_salidas_y_reservas.salidas.SalidaRepository;
-
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,10 +24,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReservaService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReservaService.class);
+
     private final ReservaRepository reservaRepository;
     private final SalidaRepository salidaRepository;
 
     public ReservaResponseDTO crear(ReservaCreateDTO dto, String titularSub) {
+        log.info("Creando reserva para salida: {} - titular: {}", dto.getSalidaId(), titularSub);
+
         Reserva reserva = Reserva.builder()
                 .salidaId(dto.getSalidaId())
                 .titularSub(titularSub)
@@ -34,52 +40,68 @@ public class ReservaService {
                 .build();
 
         Reserva guardada = reservaRepository.save(reserva);
+        log.debug("Reserva creada con ID: {}", guardada.getId());
         return mapToResponse(guardada);
     }
 
-    public List<ReservaResponseDTO> listarPorTitular(String titularSub) {
-        return reservaRepository.findByTitularSub(titularSub).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<ReservaResponseDTO> listarPorTitular(String titularSub, Pageable pageable) {
+        log.info("Listando reservas del titular: {} - page: {}, size: {}", titularSub, pageable.getPageNumber(), pageable.getPageSize());
+        return reservaRepository.findByTitularSub(titularSub, pageable)
+                .map(this::mapToResponse);
     }
 
-    public List<ReservaResponseDTO> listarPorPrestador(String prestadorSub) {
+    public Page<ReservaResponseDTO> listarPorPrestador(String prestadorSub, Pageable pageable) {
+        log.info("Listando reservas del prestador: {} - page: {}, size: {}", prestadorSub, pageable.getPageNumber(), pageable.getPageSize());
+
         List<Salida> salidas = salidaRepository.findByPrestadorSub(prestadorSub);
         List<UUID> salidaIds = salidas.stream().map(Salida::getId).collect(Collectors.toList());
 
-
-        return reservaRepository.findBySalidaIdIn(salidaIds).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return reservaRepository.findBySalidaIdIn(salidaIds, pageable)
+                .map(this::mapToResponse);
     }
 
     public ReservaResponseDTO confirmar(UUID id) {
+        log.info("Confirmando reserva: {}", id);
+
         Reserva reserva = reservaRepository.findById(id)
-                .orElseThrow(() -> new ReservaNoEncontradaException(id));
+                .orElseThrow(() -> {
+                    log.warn("Reserva no encontrada: {}", id);
+                    return new ReservaNoEncontradaException(id);
+                });
 
         if (reserva.getEstado() != EstadoReserva.PENDIENTE_DE_PAGO) {
+            log.warn("La reserva {} no esta pendiente de pago", id);
             throw new ReservaFinalizadaException();
         }
 
         reserva.setEstado(EstadoReserva.CONFIRMADA);
         Reserva guardada = reservaRepository.save(reserva);
+        log.debug("Reserva confirmada: {}", id);
         return mapToResponse(guardada);
     }
 
     public ReservaResponseDTO cancelar(UUID id, String titularSub) {
+        log.info("Cancelando reserva: {} - titular: {}", id, titularSub);
+
         Reserva reserva = reservaRepository.findById(id)
-                .orElseThrow(() -> new ReservaNoEncontradaException(id));
+                .orElseThrow(() -> {
+                    log.warn("Reserva no encontrada: {}", id);
+                    return new ReservaNoEncontradaException(id);
+                });
 
         if (!reserva.getTitularSub().equals(titularSub)) {
+            log.warn("El titular {} no tiene permiso para cancelar la reserva {}", titularSub, id);
             throw new PropiedadNoAutorizadaException();
         }
 
         if (reserva.getEstado() == EstadoReserva.CANCELADA) {
+            log.warn("La reserva {} ya esta cancelada", id);
             return mapToResponse(reserva);
         }
 
         reserva.setEstado(EstadoReserva.CANCELADA);
         Reserva guardada = reservaRepository.save(reserva);
+        log.debug("Reserva cancelada: {}", id);
         return mapToResponse(guardada);
     }
 
@@ -91,7 +113,6 @@ public class ReservaService {
         response.setCantidad(reserva.getCantidad());
         response.setFechaCreacion(reserva.getFechaCreacion());
         response.setEstado(reserva.getEstado());
-
 
         Salida salida = salidaRepository.findById(reserva.getSalidaId()).orElse(null);
         response.setAfectada(salida != null && salida.getEstado() == EstadoSalida.SUSPENDIDA);

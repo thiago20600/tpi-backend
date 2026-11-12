@@ -18,8 +18,10 @@ echo "PASO 2: Copiando .m2 al contexto de build de ms-catalogo..."
 echo "=========================================="
 rm -rf ./ms-catalogo/.m2
 rm -rf ./gateway/.m2
+rm -rf ./ms-salidas-y-reservas/.m2
 cp -r "${HOME}/.m2" ./ms-catalogo/.m2
 cp -r "${HOME}/.m2" ./gateway/.m2
+cp -r "${HOME}/.m2/." ./ms-salidas-y-reservas/.m2/
 
 echo "=========================================="
 echo "PASO 3: Construyendo imagen y levantando Docker Compose..."
@@ -31,6 +33,7 @@ echo "PASO 4: Limpiando .m2 copiado..."
 echo "=========================================="
 rm -rf ./ms-catalogo/.m2
 rm -rf ./gateway/.m2
+rm -rf ./ms-salidas-y-reservas/.m2
 
 echo "=========================================="
 echo "¡Listo! Los contenedores están corriendo."

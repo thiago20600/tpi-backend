@@ -3,6 +3,8 @@ package com.tpbackend.ms_salidas_y_reservas.reservas;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,6 +22,9 @@ import com.tpbackend.ms_salidas_y_reservas.reservas.dto.ReservaResponseDTO;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @RestController
 @RequestMapping("/api/v1/reservas")
 @RequiredArgsConstructor
@@ -27,26 +32,29 @@ public class ReservaController {
 
     private final ReservaService reservaService;
 
+
     @PostMapping
     public ResponseEntity<ReservaResponseDTO> crear(@Valid @RequestBody ReservaCreateDTO dto, @AuthenticationPrincipal Jwt jwt) {
         String titularSub = jwt.getSubject();
         ReservaResponseDTO response = reservaService.crear(dto, titularSub);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+    
 
     @GetMapping
-    public ResponseEntity<List<ReservaResponseDTO>> listarReservas(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Page<ReservaResponseDTO>> listarReservas(@AuthenticationPrincipal Jwt jwt, @ParameterObject Pageable pageable) {
         String sub = jwt.getSubject();
         List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
 
-        List<ReservaResponseDTO> response;
-        if (roles.contains("PRESTADOR")) {
-            response = reservaService.listarPorPrestador(sub);
+        Page<ReservaResponseDTO> response;
+        if (roles != null && roles.contains("PRESTADOR")) {
+            response = reservaService.listarPorPrestador(sub, pageable);
         } else {
-            response = reservaService.listarPorTitular(sub);
+            response = reservaService.listarPorTitular(sub, pageable);
         }
         return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/{id}/cancelacion")
     public ResponseEntity<ReservaResponseDTO> cancelar(
@@ -56,6 +64,7 @@ public class ReservaController {
         ReservaResponseDTO response = reservaService.cancelar(id, titularSub);
         return ResponseEntity.ok(response);
     }
+    
 
     @PostMapping("/{id}/confirmacion")
     public ResponseEntity<ReservaResponseDTO> confirmar(@PathVariable UUID id) {

@@ -46,7 +46,6 @@ public class Salida {
     @Column(nullable = false)
     private Integer capacidad;
 
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
