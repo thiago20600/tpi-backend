@@ -1,0 +1,19 @@
+{
+  "title": "Logs de api-gateway",
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Logs de api-gateway",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{container=\"api-gateway\"}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 20, "w": 24, "x": 0, "y": 0 }
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
