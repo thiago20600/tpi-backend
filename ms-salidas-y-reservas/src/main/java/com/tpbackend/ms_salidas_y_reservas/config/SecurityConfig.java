@@ -40,7 +40,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/salidas/**").hasAnyRole("TURISTA", "PRESTADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/salidas/*/suspension").hasRole("PRESTADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/salidas/*/inicio").hasRole("PRESTADOR")
-                .requestMatchers(HttpMethod.POST, "/api/v1/salidas/*/finalizacion").hasRole("PRESTADOR") 
+                .requestMatchers(HttpMethod.POST, "/api/v1/salidas/*/finalizacion").hasRole("PRESTADOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/salidas/*/revision-viento").hasRole("PRESTADOR")
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));

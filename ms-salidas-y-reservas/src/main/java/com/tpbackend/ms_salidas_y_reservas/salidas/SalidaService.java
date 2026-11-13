@@ -1,5 +1,6 @@
 package com.tpbackend.ms_salidas_y_reservas.salidas;
 
+import com.tpbackend.BusinessException;
 import com.tpbackend.ms_salidas_y_reservas.exception.FechaInvalidaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.PropiedadNoAutorizadaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.SalidaNoEncontradaException;
@@ -13,6 +14,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.tpbackend.ms_salidas_y_reservas.salidas.client.ActividadClient;
+import com.tpbackend.ms_salidas_y_reservas.salidas.client.EvaluacionClient;
+import com.tpbackend.ms_salidas_y_reservas.salidas.client.dto.ActividadDTO;
+import com.tpbackend.ms_salidas_y_reservas.salidas.client.dto.EvaluacionResponseDTO;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -25,7 +30,11 @@ public class SalidaService {
 
     private final SalidaRepository salidaRepository;
 
-    public SalidaResponseDTO crear(SalidaCreateDTO dto, String prestadorSub) {
+    private final ActividadClient actividadClient;
+
+    private final EvaluacionClient evaluacionClient;
+
+    public SalidaResponseDTO crear(SalidaCreateDTO dto, String prestadorSub, String token) {
         log.info("Creando salida para actividad: {} - prestador: {}", dto.getActividadId(), prestadorSub);
 
         if (dto.getInicio().isBefore(LocalDateTime.now())) {
@@ -35,6 +44,13 @@ public class SalidaService {
         if (dto.getFin().isBefore(dto.getInicio())) {
             log.warn("La fecha de fin debe ser posterior al inicio: {} - {}", dto.getInicio(), dto.getFin());
             throw new FechaInvalidaException("La fecha de fin debe ser posterior al inicio");
+        }
+
+        ActividadDTO actividad = actividadClient.obtenerActividad(dto.getActividadId(), token);
+
+        if (actividad == null || !actividad.getPrestadorSub().equals(prestadorSub)) {
+            log.warn("La actividad {} no existe o no pertenece al prestador {}", dto.getActividadId(), prestadorSub);
+            throw new BusinessException("La actividad no existe o no te pertenece", 404);
         }
 
         Salida salida = Salida.builder()
@@ -165,6 +181,37 @@ public class SalidaService {
         Salida guardada = salidaRepository.save(salida);
         log.debug("Salida finalizada: {}", id);
         return mapToResponse(guardada);
+    }
+
+    public SalidaResponseDTO revisarViento(UUID id, String prestadorSub, String token) {
+        log.info("Revisando viento de la salida: {} - prestador: {}", id, prestadorSub);
+
+        Salida salida = salidaRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Salida no encontrada: {}", id);
+                    return new SalidaNoEncontradaException(id);
+                });
+
+        if (!salida.getPrestadorSub().equals(prestadorSub)) {
+            log.warn("El prestador {} no tiene permiso para revisar la salida {}", prestadorSub, id);
+            throw new PropiedadNoAutorizadaException();
+        }
+
+        if (salida.getEstado() != EstadoSalida.PROGRAMADA) {
+            log.warn("La salida {} no esta programada (estado: {})", id, salida.getEstado());
+            throw new SalidaNoProgramadaException();
+        }
+
+        EvaluacionResponseDTO evaluacion = evaluacionClient.evaluarViento(
+                salida.getActividadId(), salida.getInicio(), salida.getFin(), token);
+
+        if ("SUPERA_UMBRAL".equals(evaluacion.getResultado())) {
+            salida.setEstado(EstadoSalida.SUSPENDIDA);
+            salidaRepository.save(salida);
+            log.warn("La salida {} fue suspendida por viento", id);
+        }
+
+        return mapToResponse(salida);
     }
 
     private SalidaResponseDTO mapToResponse(Salida salida) {

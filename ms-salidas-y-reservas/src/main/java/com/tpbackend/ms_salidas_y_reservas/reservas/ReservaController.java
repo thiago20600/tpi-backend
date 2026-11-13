@@ -36,9 +36,7 @@ public class ReservaController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ReservaResponseDTO>> listarReservas(
-            @AuthenticationPrincipal Jwt jwt,
-            @ParameterObject Pageable pageable) {
+    public ResponseEntity<Page<ReservaResponseDTO>> listarReservas(@AuthenticationPrincipal Jwt jwt, @ParameterObject Pageable pageable) {
         String sub = jwt.getSubject();
         List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
 
@@ -54,9 +52,7 @@ public class ReservaController {
     }
 
     @PostMapping("/{id}/cancelacion")
-    public ResponseEntity<ReservaResponseDTO> cancelar(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<ReservaResponseDTO> cancelar(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         String titularSub = jwt.getSubject();
         ReservaResponseDTO response = reservaService.cancelar(id, titularSub);
         return ResponseEntity.ok(response);

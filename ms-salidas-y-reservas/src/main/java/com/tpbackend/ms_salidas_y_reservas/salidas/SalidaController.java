@@ -32,15 +32,13 @@ public class SalidaController {
     @PostMapping
     public ResponseEntity<SalidaResponseDTO> crear(@Valid @RequestBody SalidaCreateDTO dto, @AuthenticationPrincipal Jwt jwt) {
         String prestadorSub = jwt.getSubject();
-        SalidaResponseDTO response = salidaService.crear(dto, prestadorSub);
+        String token = jwt.getTokenValue();
+        SalidaResponseDTO response = salidaService.crear(dto, prestadorSub, token);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
-    public ResponseEntity<Page<SalidaResponseDTO>> listar(
-            @RequestParam(required = false) UUID actividadId,
-            @AuthenticationPrincipal Jwt jwt,
-            @ParameterObject Pageable pageable) {
+    public ResponseEntity<Page<SalidaResponseDTO>> listar(@RequestParam(required = false) UUID actividadId, @AuthenticationPrincipal Jwt jwt, @ParameterObject Pageable pageable) {
         String sub = jwt.getSubject();
         List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
 
@@ -62,29 +60,33 @@ public class SalidaController {
     }
 
     @PostMapping("/{id}/suspension")
-    public ResponseEntity<SalidaResponseDTO> suspender(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<SalidaResponseDTO> suspender(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         String prestadorSub = jwt.getSubject();
         SalidaResponseDTO response = salidaService.suspender(id, prestadorSub);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/inicio")
-    public ResponseEntity<SalidaResponseDTO> iniciarSalida(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<SalidaResponseDTO> iniciarSalida(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         String prestadorSub = jwt.getSubject();
         SalidaResponseDTO response = salidaService.iniciarSalida(id, prestadorSub);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/finalizacion")
-    public ResponseEntity<SalidaResponseDTO> finalizarSalida(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<SalidaResponseDTO> finalizarSalida(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         String prestadorSub = jwt.getSubject();
         SalidaResponseDTO response = salidaService.finalizarSalida(id, prestadorSub);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{id}/revision-viento")
+    public ResponseEntity<SalidaResponseDTO> revisarViento(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        String prestadorSub = jwt.getSubject();
+        String token = jwt.getTokenValue();
+        SalidaResponseDTO response = salidaService.revisarViento(id, prestadorSub, token);
+        return ResponseEntity.ok(response);
+    }
+
+
 }
