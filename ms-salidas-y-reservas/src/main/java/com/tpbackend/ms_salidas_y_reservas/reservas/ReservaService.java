@@ -14,14 +14,13 @@ import com.tpbackend.ms_salidas_y_reservas.reservas.dto.ReservaResponseDTO;
 import com.tpbackend.ms_salidas_y_reservas.salidas.EstadoSalida;
 import com.tpbackend.ms_salidas_y_reservas.salidas.Salida;
 import com.tpbackend.ms_salidas_y_reservas.salidas.SalidaRepository;
-
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,8 +35,6 @@ public class ReservaService {
 
     private final ReservaRepository reservaRepository;
     private final SalidaRepository salidaRepository;
-
-
 
     @Transactional
     public ReservaResponseDTO crear(ReservaCreateDTO dto, String titularSub) {
@@ -59,8 +56,11 @@ public class ReservaService {
             throw new FechaInvalidaException("La salida ya comenzo");
         }
 
-        List<Reserva> confirmadas = reservaRepository.findBySalidaIdAndEstado(salida.getId(), EstadoReserva.CONFIRMADA);
-        int ocupados = confirmadas.stream().mapToInt(Reserva::getCantidad).sum();
+        List<Reserva> ocupadas = reservaRepository.findBySalidaIdAndEstadoIn(
+                salida.getId(),
+                List.of(EstadoReserva.CONFIRMADA, EstadoReserva.PENDIENTE_DE_PAGO)
+        );
+        int ocupados = ocupadas.stream().mapToInt(Reserva::getCantidad).sum();
 
         if (ocupados + dto.getCantidad() > salida.getCapacidad()) {
             log.warn("No hay suficientes lugares para la salida {}", dto.getSalidaId());
@@ -79,15 +79,11 @@ public class ReservaService {
         return mapToResponse(guardada);
     }
 
-
-
     public Page<ReservaResponseDTO> listarPorTitular(String titularSub, Pageable pageable) {
         log.info("Listando reservas del titular: {} - page: {}, size: {}", titularSub, pageable.getPageNumber(), pageable.getPageSize());
         return reservaRepository.findByTitularSub(titularSub, pageable)
                 .map(this::mapToResponse);
     }
-
-
 
     public Page<ReservaResponseDTO> listarPorPrestador(String prestadorSub, Pageable pageable) {
         log.info("Listando reservas del prestador: {} - page: {}, size: {}", prestadorSub, pageable.getPageNumber(), pageable.getPageSize());
@@ -99,10 +95,7 @@ public class ReservaService {
                 .map(this::mapToResponse);
     }
 
-
-
     public ReservaResponseDTO confirmar(UUID id) {
-
         log.info("Confirmando reserva: {}", id);
 
         Reserva reserva = reservaRepository.findById(id)
@@ -121,8 +114,6 @@ public class ReservaService {
         log.debug("Reserva confirmada: {}", id);
         return mapToResponse(guardada);
     }
-
-
 
     public ReservaResponseDTO cancelar(UUID id, String titularSub) {
         log.info("Cancelando reserva: {} - titular: {}", id, titularSub);
@@ -156,8 +147,6 @@ public class ReservaService {
         log.debug("Reserva cancelada: {}", id);
         return mapToResponse(guardada);
     }
-
-
 
     private ReservaResponseDTO mapToResponse(Reserva reserva) {
         ReservaResponseDTO response = new ReservaResponseDTO();

@@ -35,7 +35,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/reservas").hasRole("TURISTA") 
                 .requestMatchers(HttpMethod.GET, "/api/v1/reservas").hasAnyRole("PRESTADOR", "TURISTA") 
                 .requestMatchers("/api/v1/reservas/*/cancelacion").hasRole("TURISTA") 
-                .requestMatchers("/api/v1/reservas/*/confirmacion").hasRole("SERVICE") 
+                .requestMatchers("/api/v1/reservas/*/confirmacion").hasRole("SERVICE")
+                .requestMatchers(HttpMethod.POST, "/api/v1/salidas").hasRole("PRESTADOR")
+                .requestMatchers(HttpMethod.GET, "/api/v1/salidas/**").hasAnyRole("TURISTA", "PRESTADOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/salidas/*/suspension").hasRole("PRESTADOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/salidas/*/inicio").hasRole("PRESTADOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/salidas/*/finalizacion").hasRole("PRESTADOR") 
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
