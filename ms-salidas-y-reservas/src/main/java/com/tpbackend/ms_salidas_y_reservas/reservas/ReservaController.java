@@ -17,10 +17,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Reservas")
 @RestController
 @RequestMapping("/api/v1/reservas")
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class ReservaController {
 
     private final ReservaService reservaService;
 
+    @Operation(summary = "Crear reserva", description = "Crea una nueva reserva para una salida")
     @PostMapping
     public ResponseEntity<ReservaResponseDTO> crear(@Valid @RequestBody ReservaCreateDTO dto, @AuthenticationPrincipal Jwt jwt) {
         String titularSub = jwt.getSubject();
@@ -35,6 +39,7 @@ public class ReservaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "Listar reservas", description = "Lista las reservas del usuario autenticado segun su rol")
     @GetMapping
     public ResponseEntity<Page<ReservaResponseDTO>> listarReservas(@AuthenticationPrincipal Jwt jwt, @ParameterObject Pageable pageable) {
         String sub = jwt.getSubject();
@@ -51,6 +56,7 @@ public class ReservaController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Cancelar reserva", description = "Cancela una reserva propia")
     @PostMapping("/{id}/cancelacion")
     public ResponseEntity<ReservaResponseDTO> cancelar(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         String titularSub = jwt.getSubject();
@@ -58,6 +64,7 @@ public class ReservaController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Confirmar reserva", description = "Confirma una reserva")
     @PostMapping("/{id}/confirmacion")
     public ResponseEntity<ReservaResponseDTO> confirmar(@PathVariable UUID id) {
         ReservaResponseDTO response = reservaService.confirmar(id);

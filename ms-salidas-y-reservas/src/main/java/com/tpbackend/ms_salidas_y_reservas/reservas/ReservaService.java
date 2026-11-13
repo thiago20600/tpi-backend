@@ -1,7 +1,7 @@
 package com.tpbackend.ms_salidas_y_reservas.reservas;
 
 
-import com.tpbackend.BusinessException;
+
 import com.tpbackend.ms_salidas_y_reservas.exception.CapacidadExcedidaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.DiaOcupadoException;
 import com.tpbackend.ms_salidas_y_reservas.exception.FechaInvalidaException;
