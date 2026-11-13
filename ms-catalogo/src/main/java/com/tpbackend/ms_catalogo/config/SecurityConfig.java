@@ -29,7 +29,7 @@ public class SecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
-                .requestMatchers("/actividades/**").hasRole("PRESTADOR") 
+                .requestMatchers("/api/v1/actividades/**").hasRole("PRESTADOR") 
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));

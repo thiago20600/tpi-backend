@@ -32,10 +32,10 @@ public class SecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
-                .requestMatchers(HttpMethod.POST, "/reservas").hasRole("TURISTA") 
-                .requestMatchers(HttpMethod.GET, "/reservas").hasAnyRole("PRESTADOR", "TURISTA") 
-                .requestMatchers("/reservas/*/cancelacion").hasRole("TURISTA") 
-                .requestMatchers("/reservas/*/confirmacion").hasRole("SERVICE") 
+                .requestMatchers(HttpMethod.POST, "/api/v1/reservas").hasRole("TURISTA") 
+                .requestMatchers(HttpMethod.GET, "/api/v1/reservas").hasAnyRole("PRESTADOR", "TURISTA") 
+                .requestMatchers("/api/v1/reservas/*/cancelacion").hasRole("TURISTA") 
+                .requestMatchers("/api/v1/reservas/*/confirmacion").hasRole("SERVICE") 
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
