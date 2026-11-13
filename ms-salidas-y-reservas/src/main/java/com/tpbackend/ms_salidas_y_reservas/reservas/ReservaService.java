@@ -1,13 +1,21 @@
 package com.tpbackend.ms_salidas_y_reservas.reservas;
 
+
+import com.tpbackend.ms_salidas_y_reservas.exception.CapacidadExcedidaException;
+import com.tpbackend.ms_salidas_y_reservas.exception.FechaInvalidaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.PropiedadNoAutorizadaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.ReservaFinalizadaException;
+import com.tpbackend.ms_salidas_y_reservas.exception.ReservaNoConfirmadaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.ReservaNoEncontradaException;
+import com.tpbackend.ms_salidas_y_reservas.exception.SalidaNoEncontradaException;
+import com.tpbackend.ms_salidas_y_reservas.exception.SalidaNoProgramadaException;
 import com.tpbackend.ms_salidas_y_reservas.reservas.dto.ReservaCreateDTO;
 import com.tpbackend.ms_salidas_y_reservas.reservas.dto.ReservaResponseDTO;
 import com.tpbackend.ms_salidas_y_reservas.salidas.EstadoSalida;
 import com.tpbackend.ms_salidas_y_reservas.salidas.Salida;
 import com.tpbackend.ms_salidas_y_reservas.salidas.SalidaRepository;
+
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +37,35 @@ public class ReservaService {
     private final ReservaRepository reservaRepository;
     private final SalidaRepository salidaRepository;
 
+
+
+    @Transactional
     public ReservaResponseDTO crear(ReservaCreateDTO dto, String titularSub) {
         log.info("Creando reserva para salida: {} - titular: {}", dto.getSalidaId(), titularSub);
+
+        Salida salida = salidaRepository.findById(dto.getSalidaId())
+                .orElseThrow(() -> {
+                    log.warn("Salida no encontrada: {}", dto.getSalidaId());
+                    return new SalidaNoEncontradaException(dto.getSalidaId());
+                });
+
+        if (salida.getEstado() != EstadoSalida.PROGRAMADA) {
+            log.warn("La salida {} no esta programada", dto.getSalidaId());
+            throw new SalidaNoProgramadaException();
+        }
+
+        if (salida.getInicio().isBefore(LocalDateTime.now())) {
+            log.warn("La salida {} ya comenzo", dto.getSalidaId());
+            throw new FechaInvalidaException("La salida ya comenzo");
+        }
+
+        List<Reserva> confirmadas = reservaRepository.findBySalidaIdAndEstado(salida.getId(), EstadoReserva.CONFIRMADA);
+        int ocupados = confirmadas.stream().mapToInt(Reserva::getCantidad).sum();
+
+        if (ocupados + dto.getCantidad() > salida.getCapacidad()) {
+            log.warn("No hay suficientes lugares para la salida {}", dto.getSalidaId());
+            throw new CapacidadExcedidaException("No hay suficientes lugares disponibles");
+        }
 
         Reserva reserva = Reserva.builder()
                 .salidaId(dto.getSalidaId())
@@ -44,11 +79,15 @@ public class ReservaService {
         return mapToResponse(guardada);
     }
 
+
+
     public Page<ReservaResponseDTO> listarPorTitular(String titularSub, Pageable pageable) {
         log.info("Listando reservas del titular: {} - page: {}, size: {}", titularSub, pageable.getPageNumber(), pageable.getPageSize());
         return reservaRepository.findByTitularSub(titularSub, pageable)
                 .map(this::mapToResponse);
     }
+
+
 
     public Page<ReservaResponseDTO> listarPorPrestador(String prestadorSub, Pageable pageable) {
         log.info("Listando reservas del prestador: {} - page: {}, size: {}", prestadorSub, pageable.getPageNumber(), pageable.getPageSize());
@@ -60,7 +99,10 @@ public class ReservaService {
                 .map(this::mapToResponse);
     }
 
+
+
     public ReservaResponseDTO confirmar(UUID id) {
+
         log.info("Confirmando reserva: {}", id);
 
         Reserva reserva = reservaRepository.findById(id)
@@ -80,6 +122,8 @@ public class ReservaService {
         return mapToResponse(guardada);
     }
 
+
+
     public ReservaResponseDTO cancelar(UUID id, String titularSub) {
         log.info("Cancelando reserva: {} - titular: {}", id, titularSub);
 
@@ -94,9 +138,17 @@ public class ReservaService {
             throw new PropiedadNoAutorizadaException();
         }
 
-        if (reserva.getEstado() == EstadoReserva.CANCELADA) {
-            log.warn("La reserva {} ya esta cancelada", id);
-            return mapToResponse(reserva);
+        if (reserva.getEstado() != EstadoReserva.CONFIRMADA) {
+            log.warn("La reserva {} no esta confirmada", id);
+            throw new ReservaNoConfirmadaException();
+        }
+
+        Salida salida = salidaRepository.findById(reserva.getSalidaId())
+                .orElseThrow(() -> new SalidaNoEncontradaException(reserva.getSalidaId()));
+
+        if (salida.getInicio().isBefore(LocalDateTime.now())) {
+            log.warn("La salida {} ya comenzo", reserva.getSalidaId());
+            throw new FechaInvalidaException("La salida ya comenzo");
         }
 
         reserva.setEstado(EstadoReserva.CANCELADA);
@@ -104,6 +156,8 @@ public class ReservaService {
         log.debug("Reserva cancelada: {}", id);
         return mapToResponse(guardada);
     }
+
+
 
     private ReservaResponseDTO mapToResponse(Reserva reserva) {
         ReservaResponseDTO response = new ReservaResponseDTO();

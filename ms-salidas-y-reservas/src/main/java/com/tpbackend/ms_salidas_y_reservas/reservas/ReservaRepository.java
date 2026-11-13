@@ -15,4 +15,5 @@ public interface ReservaRepository extends JpaRepository<Reserva, UUID>{
 
     Page<Reserva> findByTitularSub(String titularSub, Pageable pageable);
     Page<Reserva> findBySalidaIdIn(List<UUID> salidaIds, Pageable pageable);
+        List<Reserva> findBySalidaIdAndEstado(UUID salidaId, EstadoReserva estado);
 }
