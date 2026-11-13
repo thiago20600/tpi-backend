@@ -16,4 +16,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, UUID> {
     List<Reserva> findBySalidaIdAndEstado(UUID salidaId, EstadoReserva estado);
 
     List<Reserva> findBySalidaIdAndEstadoIn(UUID salidaId, List<EstadoReserva> estados);
+
+    List<Reserva> findByTitularSubAndEstadoIn(String titularSub, List<EstadoReserva> estados);
+
 }

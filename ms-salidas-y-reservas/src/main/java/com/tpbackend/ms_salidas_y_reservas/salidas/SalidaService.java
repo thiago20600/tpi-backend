@@ -6,6 +6,7 @@ import com.tpbackend.ms_salidas_y_reservas.exception.PropiedadNoAutorizadaExcept
 import com.tpbackend.ms_salidas_y_reservas.exception.SalidaNoEncontradaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.SalidaNoIniciadaException;
 import com.tpbackend.ms_salidas_y_reservas.exception.SalidaNoProgramadaException;
+import com.tpbackend.ms_salidas_y_reservas.reservas.ReservaService;
 import com.tpbackend.ms_salidas_y_reservas.salidas.dto.SalidaCreateDTO;
 import com.tpbackend.ms_salidas_y_reservas.salidas.dto.SalidaResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,8 @@ public class SalidaService {
     private final ActividadClient actividadClient;
 
     private final EvaluacionClient evaluacionClient;
+
+    private final ReservaService reservaService;
 
     public SalidaResponseDTO crear(SalidaCreateDTO dto, String prestadorSub, String token) {
         log.info("Creando salida para actividad: {} - prestador: {}", dto.getActividadId(), prestadorSub);
@@ -180,6 +183,9 @@ public class SalidaService {
         salida.setEstado(EstadoSalida.FINALIZADA);
         Salida guardada = salidaRepository.save(salida);
         log.debug("Salida finalizada: {}", id);
+
+        reservaService.finalizarReservasPorSalida(id);
+
         return mapToResponse(guardada);
     }
 
