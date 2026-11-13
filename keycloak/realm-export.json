@@ -5,7 +5,9 @@
   "roles": {
     "realm": [
       { "name": "TURISTA" },
-      { "name": "PRESTADOR" }
+      { "name": "PRESTADOR" },
+      { "name": "SERVICE"}
+
     ]
   },
   "clients": [
@@ -80,6 +82,14 @@
       "enabled": true,
       "credentials": [{ "type": "password", "value": "turistaleo", "temporary": false }],
       "realmRoles": ["TURISTA"]
+    },
+    {
+      "username": "service pagos",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "servicepagos", "temporary": false }],
+      "realmRoles": ["SERVICE"]
     }
+    
+
   ]
 }
