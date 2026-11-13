@@ -1,0 +1,19 @@
+{
+  "title": "Logs de salidas y reservas",
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Logs de salidas y reservas",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{container=\"ms-salidas-y-reservas\"}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 20, "w": 24, "x": 0, "y": 0 }
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

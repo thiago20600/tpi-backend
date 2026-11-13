@@ -42,16 +42,20 @@ public class ReservaController {
     
 
     @GetMapping
-    public ResponseEntity<Page<ReservaResponseDTO>> listarReservas(@AuthenticationPrincipal Jwt jwt, @ParameterObject Pageable pageable) {
+    public ResponseEntity<Page<ReservaResponseDTO>> listarReservas(
+            @AuthenticationPrincipal Jwt jwt,
+            @ParameterObject Pageable pageable) {
         String sub = jwt.getSubject();
         List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
 
-        Page<ReservaResponseDTO> response;
-        if (roles != null && roles.contains("PRESTADOR")) {
-            response = reservaService.listarPorPrestador(sub, pageable);
-        } else {
-            response = reservaService.listarPorTitular(sub, pageable);
-        }
+        String rolPrincipal = (roles != null && !roles.isEmpty()) ? roles.get(0) : "TURISTA";
+
+        Page<ReservaResponseDTO> response = switch (rolPrincipal) {
+            case "PRESTADOR" -> reservaService.listarPorPrestador(sub, pageable);
+            case "TURISTA" -> reservaService.listarPorTitular(sub, pageable);
+            default -> reservaService.listarPorTitular(sub, pageable);
+        };
+
         return ResponseEntity.ok(response);
     }
 
