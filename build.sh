@@ -2,6 +2,18 @@
 set -e
 
 export MSYS_NO_PATHCONV=1
+export DOCKER_BUILDKIT=1
+
+if [ -e ./ms-catalogo/.docker-build-deps ] || [ -e ./ms-salidas-y-reservas/.docker-build-deps ]; then
+  echo "Ya existe un directorio temporal .docker-build-deps; no se modificó." >&2
+  exit 1
+fi
+
+cleanup() {
+  rm -rf ./ms-catalogo/.docker-build-deps
+  rm -rf ./ms-salidas-y-reservas/.docker-build-deps
+}
+trap cleanup EXIT
 
 echo "=========================================="
 echo "PASO 1: Compilando tpi-common dentro de un contenedor Maven..."
@@ -14,26 +26,26 @@ docker run --rm \
   mvn clean install -DskipTests
 
 echo "=========================================="
-echo "PASO 2: Copiando .m2 al contexto de build de ms-catalogo..."
+echo "PASO 2: Preparando el artefacto tpi-common para los builds..."
 echo "=========================================="
-rm -rf ./ms-catalogo/.m2
-rm -rf ./gateway/.m2
-rm -rf ./ms-salidas-y-reservas/.m2
-cp -r "${HOME}/.m2" ./ms-catalogo/.m2
-cp -r "${HOME}/.m2" ./gateway/.m2
-cp -r "${HOME}/.m2/." ./ms-salidas-y-reservas/.m2/
+COMMON_ARTIFACT="${HOME}/.m2/repository/com/tpbackend/tpi-common/1.0-SNAPSHOT"
+for service in ms-catalogo ms-salidas-y-reservas; do
+  common_context="./${service}/.docker-build-deps/tpi-common/1.0-SNAPSHOT"
+  mkdir -p "${common_context}"
+  cp "${COMMON_ARTIFACT}/tpi-common-1.0-SNAPSHOT.jar" \
+    "${COMMON_ARTIFACT}/tpi-common-1.0-SNAPSHOT.pom" \
+    "${common_context}/"
+done
 
 echo "=========================================="
-echo "PASO 3: Construyendo imagen y levantando Docker Compose..."
+echo "PASO 3: Construyendo las imágenes con caché Maven de BuildKit..."
 echo "=========================================="
-docker compose up --build -d
+docker compose build
 
 echo "=========================================="
-echo "PASO 4: Limpiando .m2 copiado..."
+echo "PASO 4: Levantando Docker Compose..."
 echo "=========================================="
-rm -rf ./ms-catalogo/.m2
-rm -rf ./gateway/.m2
-rm -rf ./ms-salidas-y-reservas/.m2
+docker compose up -d
 
 echo "=========================================="
 echo "¡Listo! Los contenedores están corriendo."

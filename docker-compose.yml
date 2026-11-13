@@ -127,7 +127,7 @@ services:
     environment:
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
       - CATALOGO_SERVICE_URL=http://ms-catalogo:8081
-      - SALIDAS_SERVICE_URL=http://ms-salidas-reservas:8082
+      - SALIDAS_SERVICE_URL=http://ms-salidas-y-reservas:8082
     ports:
       - "8081:8080"
     depends_on:
