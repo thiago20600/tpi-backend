@@ -62,7 +62,8 @@ public class SalidaService {
                 .inicio(dto.getInicio())
                 .fin(dto.getFin())
                 .capacidad(dto.getCapacidad())
-                .estado(EstadoSalida.PROGRAMADA)
+                .estado(EstadoSalida.PROGRAMADA)        
+                .precio(dto.getPrecio())
                 .build();
 
         Salida guardada = salidaRepository.save(salida);
@@ -229,6 +230,7 @@ public class SalidaService {
         response.setFin(salida.getFin());
         response.setCapacidad(salida.getCapacidad());
         response.setEstado(salida.getEstado());
+        response.setPrecio(salida.getPrecio());
         return response;
     }
 }

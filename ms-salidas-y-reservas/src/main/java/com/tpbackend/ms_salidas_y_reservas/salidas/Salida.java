@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -50,4 +51,8 @@ public class Salida {
     @Column(nullable = false, length = 20)
     @Builder.Default
     private EstadoSalida estado = EstadoSalida.PROGRAMADA;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal precio;
+
 }

@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -186,8 +187,11 @@ public class ReservaService {
         response.setFechaCreacion(reserva.getFechaCreacion());
         response.setEstado(reserva.getEstado());
 
-        Salida salida = salidaRepository.findById(reserva.getSalidaId()).orElse(null);
-        response.setAfectada(salida != null && salida.getEstado() == EstadoSalida.SUSPENDIDA);
+        Salida salida = salidaRepository.findById(reserva.getSalidaId())
+                .orElseThrow(() -> new SalidaNoEncontradaException(reserva.getSalidaId()));
+
+        response.setAfectada(salida.getEstado() == EstadoSalida.SUSPENDIDA);
+        response.setMonto(salida.getPrecio().multiply(BigDecimal.valueOf(reserva.getCantidad())));
 
         return response;
     }

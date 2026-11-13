@@ -3,6 +3,7 @@ package com.tpbackend.ms_salidas_y_reservas.salidas.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import java.math.BigDecimal;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -22,4 +23,9 @@ public class SalidaCreateDTO {
     @NotNull(message = "La capacidad es obligatoria")
     @Positive(message = "La capacidad debe ser mayor a cero")
     private Integer capacidad;
+
+    @NotNull(message = "El precio es obligatorio")
+    @Positive(message = "El precio debe ser mayor a cero")
+    private BigDecimal precio;
+
 }
