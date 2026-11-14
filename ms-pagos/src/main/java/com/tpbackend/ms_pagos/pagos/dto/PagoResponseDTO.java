@@ -1,5 +1,6 @@
 package com.tpbackend.ms_pagos.pagos.dto;
 
+import com.tpbackend.ms_pagos.pagos.EstadoPago;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -11,7 +12,8 @@ public class PagoResponseDTO {
     private UUID id;
     private UUID reservaId;
     private BigDecimal monto;
-    private String estado;
-    private String qrData;
+    private EstadoPago estado;
+    private String mercadoPagoOrderId;
+    private String checkoutUrl;
     private LocalDateTime fechaCreacion;
 }

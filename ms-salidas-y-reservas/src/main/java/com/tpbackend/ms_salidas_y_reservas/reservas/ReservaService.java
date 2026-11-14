@@ -100,6 +100,16 @@ public class ReservaService {
                 .map(this::mapToResponse);
     }
 
+    public ReservaResponseDTO obtenerPorId(UUID id) {
+        log.info("Obteniendo reserva: {}", id);
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Reserva no encontrada: {}", id);
+                    return new ReservaNoEncontradaException(id);
+                });
+        return mapToResponse(reserva);
+    }
+
     public Page<ReservaResponseDTO> listarPorPrestador(String prestadorSub, Pageable pageable) {
         log.info("Listando reservas del prestador: {} - page: {}, size: {}", prestadorSub, pageable.getPageNumber(), pageable.getPageSize());
 
@@ -119,6 +129,9 @@ public class ReservaService {
                     return new ReservaNoEncontradaException(id);
                 });
 
+        if (reserva.getEstado() == EstadoReserva.CONFIRMADA) {
+            return mapToResponse(reserva);
+        }
         if (reserva.getEstado() != EstadoReserva.PENDIENTE_DE_PAGO) {
             log.warn("La reserva {} no esta pendiente de pago", id);
             throw new ReservaFinalizadaException();

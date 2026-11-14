@@ -21,8 +21,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/webjars/**",
                                 "/catalogo/v3/api-docs/**",
-                                "/salidas/v3/api-docs/**"  
+                                "/salidas/v3/api-docs/**",
+                                "/pagos/v3/api-docs/**"
                         ).permitAll()
+                        .pathMatchers("/api/v1/pagos/webhook").permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))

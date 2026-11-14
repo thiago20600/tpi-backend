@@ -40,6 +40,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER_KC_PG}"]
       interval: 5s
       retries: 10
+      start_period: 90s
     networks:
       - red-datos
 
@@ -74,10 +75,11 @@ services:
       - PAGOS_DB_PASSWORD=${PAGOS_DB_PASSWORD}
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
       - KEYCLOAK_BASE_URL=http://keycloak:8080
-      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_SERVICE_CLIENT_ID}
-      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_SERVICE_CLIENT_SECRET}
+      - KEYCLOAK_SERVICE_CLIENT_ID=${KEYCLOAK_SERVICE_CLIENT_ID}
+      - KEYCLOAK_SERVICE_CLIENT_SECRET=${KEYCLOAK_SERVICE_CLIENT_SECRET}
       - MERCADO_PAGO_ACCESS_TOKEN=${MERCADO_PAGO_ACCESS_TOKEN}
       - MERCADO_PAGO_BASE_URL=${MERCADO_PAGO_BASE_URL:-https://api.mercadopago.com}
+      - MERCADO_PAGO_WEBHOOK_SECRET=${MERCADO_PAGO_WEBHOOK_SECRET}
       - RESERVAS_SERVICE_URL=http://ms-salidas-y-reservas:8082
     volumes:
       - ./logs/pagos:/app/logs
@@ -105,6 +107,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${PAGOS_DB_USER} -d ${PAGOS_DB_NAME}"]
       interval: 5s
       retries: 10
+      start_period: 90s
     networks:
       - red-datos
   
@@ -121,6 +124,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${CATALOGO_DB_USER} -d ${CATALOGO_DB_NAME}"]
       interval: 5s
       retries: 10
+      start_period: 90s
     networks:
       - red-datos
   
@@ -185,6 +189,17 @@ services:
     networks:
       - red-aplicacion
 
+  ngrok:
+    image: ngrok/ngrok:3
+    container_name: ngrok-tunnel
+    command: ["http", "http://api-gateway:8080", "--url", "https://${NGROK_DOMAIN}"]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    depends_on:
+      - api-gateway
+    networks:
+      - red-aplicacion
+
   ms-salidas-y-reservas:
     build:
       context: ./ms-salidas-y-reservas
@@ -220,6 +235,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${SALIDAS_DB_USER} -d ${SALIDAS_DB_NAME}"]
       interval: 5s
       retries: 10
+      start_period: 90s
     networks:
       - red-datos
 

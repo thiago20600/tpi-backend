@@ -23,24 +23,36 @@ public class MercadoPagoClient {
 
     private final RestClient mercadoPagoRestClient;
 
-    public MercadoPagoResponseDTO crearOrden(UUID reservaId, BigDecimal monto) {
+    public MercadoPagoResponseDTO crearOrden(
+            UUID reservaId, BigDecimal monto, String payerEmail, UUID idempotencyKey) {
         log.info("Llamando a Mercado Pago para crear orden - reserva: {} - monto: {}", reservaId, monto);
 
         Map<String, Object> body = Map.of(
-                "type", "qr",
-                "total_amount", monto,
+                "type", "online",
+                "processing_mode", "manual",
+                "total_amount", monto.toPlainString(),
+                "external_reference", reservaId.toString(),
                 "description", "Reserva " + reservaId,
+                "payer", Map.of("email", payerEmail),
                 "items", List.of(Map.of(
                         "title", "Reserva",
                         "quantity", 1,
-                        "unit_price", monto
+                        "unit_price", monto.toPlainString()
                 ))
         );
 
         return mercadoPagoRestClient.post()
                 .uri("/v1/orders")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Idempotency-Key", idempotencyKey.toString())
                 .body(body)
+                .retrieve()
+                .body(MercadoPagoResponseDTO.class);
+    }
+
+    public MercadoPagoResponseDTO obtenerOrden(String orderId) {
+        return mercadoPagoRestClient.get()
+                .uri("/v1/orders/{id}", orderId)
                 .retrieve()
                 .body(MercadoPagoResponseDTO.class);
     }

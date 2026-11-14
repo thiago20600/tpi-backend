@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/pagos/webhook").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/pagos").hasRole("TURISTA")
                 .requestMatchers(HttpMethod.POST, "/api/v1/pagos/*/cancelacion").hasRole("TURISTA")
+
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

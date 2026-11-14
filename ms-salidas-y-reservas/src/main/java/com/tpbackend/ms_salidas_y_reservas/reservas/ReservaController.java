@@ -56,6 +56,12 @@ public class ReservaController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Obtener reserva por ID", description = "Obtiene una reserva por ID para consultas internas")
+    @GetMapping("/{id}")
+    public ResponseEntity<ReservaResponseDTO> obtenerPorId(@PathVariable UUID id) {
+        return ResponseEntity.ok(reservaService.obtenerPorId(id));
+    }
+
     @Operation(summary = "Cancelar reserva", description = "Cancela una reserva propia")
     @PostMapping("/{id}/cancelacion")
     public ResponseEntity<ReservaResponseDTO> cancelar(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {

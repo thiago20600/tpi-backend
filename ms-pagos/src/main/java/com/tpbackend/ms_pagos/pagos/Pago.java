@@ -2,6 +2,8 @@ package com.tpbackend.ms_pagos.pagos;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,10 +38,14 @@ public class Pago {
     private BigDecimal monto;
 
     @Column(nullable = false, length = 20)
-    private String estado;
+    @Enumerated(EnumType.STRING)
+    private EstadoPago estado;
 
-    @Column(length = 500)
-    private String qrData;
+    @Column(length = 100, unique = true)
+    private String mercadoPagoOrderId;
+
+    @Column(length = 1000)
+    private String checkoutUrl;
 
     @Column(nullable = false)
     private LocalDateTime fechaCreacion;

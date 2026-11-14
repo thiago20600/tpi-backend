@@ -6,8 +6,7 @@
     "realm": [
       { "name": "TURISTA" },
       { "name": "PRESTADOR" },
-      { "name": "SERVICE"}
-
+      { "name": "SERVICE" }
     ]
   },
   "clients": [
@@ -37,61 +36,23 @@
     {
       "username": "prestador thiago",
       "enabled": true,
-      "credentials": [{ "type": "password", "value": "prestadorthiago", "temporary": false }],
-      "realmRoles": ["PRESTADOR"]
-    },
-    {
-      "username": "prestador angelo",
-      "enabled": true,
-      "credentials": [{ "type": "password", "value": "prestadorangelo", "temporary": false }],
-      "realmRoles": ["PRESTADOR"]
-    },
-    {
-      "username": "prestador facundo",
-      "enabled": true,
-      "credentials": [{ "type": "password", "value": "prestadorfacundo", "temporary": false }],
-      "realmRoles": ["PRESTADOR"]
-    },
-    {
-      "username": "prestador german",
-      "enabled": true,
-      "credentials": [{ "type": "password", "value": "prestadorgerman", "temporary": false }],
-      "realmRoles": ["PRESTADOR"]
-    },
-    {
-      "username": "prestadorleo",
-      "enabled": true,
-      "credentials": [{ "type": "password", "value": "prestadorleo", "temporary": false }],
+      "firstName": "Thiago",
+      "lastName": "Prestador",
+      "email": "prestador.thiago@example.com",
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [{"type": "password", "value": "prestadorthiago", "temporary": false}],
       "realmRoles": ["PRESTADOR"]
     },
     {
       "username": "turista thiago",
       "enabled": true,
-      "credentials": [{ "type": "password", "value": "turistathiago", "temporary": false }],
-      "realmRoles": ["TURISTA"]
-    },
-    {
-      "username": "turista angelo",
-      "enabled": true,
-      "credentials": [{ "type": "password", "value": "turistaangelo", "temporary": false }],
-      "realmRoles": ["TURISTA"]
-    },
-    {
-      "username": "turista facundo",
-      "enabled": true,
-      "credentials": [{ "type": "password", "value": "turistafacundo", "temporary": false }],
-      "realmRoles": ["TURISTA"]
-    },
-    {
-      "username": "turista german",
-      "enabled": true,
-      "credentials": [{ "type": "password", "value": "turistagerman", "temporary": false }],
-      "realmRoles": ["TURISTA"]
-    },
-    {
-      "username": "turista leo",
-      "enabled": true,
-      "credentials": [{ "type": "password", "value": "turistaleo", "temporary": false }],
+      "firstName": "Thiago",
+      "lastName": "Turista",
+      "email": "turista.thiago@example.com",
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [{"type": "password", "value": "turistathiago", "temporary": false}],
       "realmRoles": ["TURISTA"]
     },
     {
@@ -100,7 +61,5 @@
       "serviceAccountClientId": "${KEYCLOAK_SERVICE_CLIENT_ID}",
       "realmRoles": ["SERVICE"]
     }
-    
-
   ]
 }
