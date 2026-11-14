@@ -1,0 +1,19 @@
+{
+  "title": "Logs de Pagos",
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Logs de ms-pagos",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{container=\"ms-pagos\"}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 20, "w": 24, "x": 0, "y": 0 }
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

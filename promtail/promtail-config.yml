@@ -15,7 +15,7 @@ scrape_configs:
         refresh_interval: 5s
     relabel_configs:
       - source_labels: ['__meta_docker_container_name']
-        regex: '/(ms-catalogo|api-gateway|ms-salidas-y-reservas)'
+        regex: '/(ms-catalogo|api-gateway|ms-salidas-y-reservas|ms-pagos)'
         action: keep
       - source_labels: ['__meta_docker_container_name']
         regex: '/(.*)'

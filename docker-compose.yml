@@ -10,6 +10,8 @@ services:
       KC_DB_PASSWORD: ${DB_PASSWORD_KC_PG}                        
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_SERVICE_CLIENT_ID: ${KEYCLOAK_SERVICE_CLIENT_ID}
+      KEYCLOAK_SERVICE_CLIENT_SECRET: ${KEYCLOAK_SERVICE_CLIENT_SECRET}
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
       KC_HTTP_ENABLED: "true"
@@ -59,6 +61,51 @@ services:
         condition: service_started   
     networks:
       - red-aplicacion
+      - red-datos
+
+  ms-pagos:
+    build:
+      context: ./ms-pagos
+      dockerfile: dockerfile
+    container_name: ms-pagos
+    environment:
+      - PAGOS_DB_URL=${PAGOS_DB_URL}
+      - PAGOS_DB_USER=${PAGOS_DB_USER}
+      - PAGOS_DB_PASSWORD=${PAGOS_DB_PASSWORD}
+      - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_SERVICE_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_SERVICE_CLIENT_SECRET}
+      - MERCADO_PAGO_ACCESS_TOKEN=${MERCADO_PAGO_ACCESS_TOKEN}
+      - MERCADO_PAGO_BASE_URL=${MERCADO_PAGO_BASE_URL:-https://api.mercadopago.com}
+      - RESERVAS_SERVICE_URL=http://ms-salidas-y-reservas:8082
+    volumes:
+      - ./logs/pagos:/app/logs
+    depends_on:
+      postgres-pagos:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      ms-salidas-y-reservas:
+        condition: service_started
+    networks:
+      - red-aplicacion
+      - red-datos
+
+  postgres-pagos:
+    image: postgres:16-alpine
+    container_name: postgres-pagos
+    environment:
+      POSTGRES_USER: ${PAGOS_DB_USER}
+      POSTGRES_PASSWORD: ${PAGOS_DB_PASSWORD}
+      POSTGRES_DB: ${PAGOS_DB_NAME}
+    volumes:
+      - pgdata-pagos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PAGOS_DB_USER} -d ${PAGOS_DB_NAME}"]
+      interval: 5s
+      retries: 10
+    networks:
       - red-datos
   
   postgres-catalogo:
@@ -128,10 +175,13 @@ services:
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
       - CATALOGO_SERVICE_URL=http://ms-catalogo:8081
       - SALIDAS_SERVICE_URL=http://ms-salidas-y-reservas:8082
+      - PAGOS_SERVICE_URL=http://ms-pagos:8083
     ports:
       - "8081:8080"
     depends_on:
       - ms-catalogo
+      - ms-salidas-y-reservas
+      - ms-pagos
     networks:
       - red-aplicacion
 
@@ -181,6 +231,7 @@ volumes:
   loki-data:
   grafana-data:
   pgdata-salidas:
+  pgdata-pagos:
 
 networks:
   red-datos:

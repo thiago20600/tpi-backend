@@ -12,6 +12,17 @@
   },
   "clients": [
     {
+      "clientId": "${KEYCLOAK_SERVICE_CLIENT_ID}",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_SERVICE_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    },
+    {
       "clientId": "tpi-cliente",
       "enabled": true,
       "publicClient": true,
@@ -84,9 +95,9 @@
       "realmRoles": ["TURISTA"]
     },
     {
-      "username": "service pagos",
+      "username": "service-account-${KEYCLOAK_SERVICE_CLIENT_ID}",
       "enabled": true,
-      "credentials": [{ "type": "password", "value": "servicepagos", "temporary": false }],
+      "serviceAccountClientId": "${KEYCLOAK_SERVICE_CLIENT_ID}",
       "realmRoles": ["SERVICE"]
     }
     

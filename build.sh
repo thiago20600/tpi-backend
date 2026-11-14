@@ -4,7 +4,9 @@ set -e
 export MSYS_NO_PATHCONV=1
 export DOCKER_BUILDKIT=1
 
-if [ -e ./ms-catalogo/.docker-build-deps ] || [ -e ./ms-salidas-y-reservas/.docker-build-deps ]; then
+if [ -e ./ms-catalogo/.docker-build-deps ] || \
+   [ -e ./ms-salidas-y-reservas/.docker-build-deps ] || \
+   [ -e ./ms-pagos/.docker-build-deps ]; then
   echo "Ya existe un directorio temporal .docker-build-deps; no se modificó." >&2
   exit 1
 fi
@@ -12,6 +14,7 @@ fi
 cleanup() {
   rm -rf ./ms-catalogo/.docker-build-deps
   rm -rf ./ms-salidas-y-reservas/.docker-build-deps
+  rm -rf ./ms-pagos/.docker-build-deps
 }
 trap cleanup EXIT
 
@@ -29,7 +32,7 @@ echo "=========================================="
 echo "PASO 2: Preparando el artefacto tpi-common para los builds..."
 echo "=========================================="
 COMMON_ARTIFACT="${HOME}/.m2/repository/com/tpbackend/tpi-common/1.0-SNAPSHOT"
-for service in ms-catalogo ms-salidas-y-reservas; do
+for service in ms-catalogo ms-salidas-y-reservas ms-pagos; do
   common_context="./${service}/.docker-build-deps/tpi-common/1.0-SNAPSHOT"
   mkdir -p "${common_context}"
   cp "${COMMON_ARTIFACT}/tpi-common-1.0-SNAPSHOT.jar" \
