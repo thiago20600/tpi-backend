@@ -1,6 +1,11 @@
 package com.tpbackend.ms_pagos.pagos;
 
-import com.tpbackend.BusinessException;
+import com.tpbackend.ms_pagos.exceptions.EmailUsuarioNoConfiguradoException;
+import com.tpbackend.ms_pagos.exceptions.MontoReservaInvalidoException;
+import com.tpbackend.ms_pagos.exceptions.PagoNoEncontradoException;
+import com.tpbackend.ms_pagos.exceptions.ReservaNoPendientePagoException;
+import com.tpbackend.ms_pagos.exceptions.ReservaNoPerteneceUsuarioException;
+import com.tpbackend.ms_pagos.exceptions.RespuestaMercadoPagoException;
 import com.tpbackend.ms_pagos.mercado_pago.MercadoPagoClient;
 import com.tpbackend.ms_pagos.mercado_pago.MercadoPagoWebhookSignatureValidator;
 import com.tpbackend.ms_pagos.mercado_pago.dto.MercadoPagoResponseDTO;
@@ -33,12 +38,12 @@ public class PagoService {
 
         String email = jwt.getClaimAsString("email");
         if (email == null || email.isBlank()) {
-            throw new BusinessException("El usuario no tiene un email configurado", 400);
+            throw new EmailUsuarioNoConfiguradoException();
         }
 
         ReservaDTO reserva = reservaClient.obtenerReserva(request.getReservaId());
         if (!jwt.getSubject().equals(reserva.getTitularSub())) {
-            throw new BusinessException("La reserva no pertenece al usuario autenticado", 403);
+            throw new ReservaNoPerteneceUsuarioException();
         }
 
         Pago pago = pagoRepository.findFirstByReservaIdOrderByFechaCreacionDesc(request.getReservaId())
@@ -51,10 +56,10 @@ public class PagoService {
             return pago;
         }
         if (!"PENDIENTE_DE_PAGO".equals(reserva.getEstado())) {
-            throw new BusinessException("La reserva no está pendiente de pago", 409);
+            throw new ReservaNoPendientePagoException();
         }
         if (reserva.getMonto() == null || reserva.getMonto().signum() <= 0) {
-            throw new BusinessException("La reserva tiene un monto inválido", 400);
+            throw new MontoReservaInvalidoException();
         }
 
         pago.setMonto(reserva.getMonto());
@@ -64,11 +69,13 @@ public class PagoService {
         MercadoPagoResponseDTO response = mercadoPagoClient.crearOrden(
                 request.getReservaId(), reserva.getMonto(), email, pago.getId());
         if (response == null || response.getId() == null || response.getCheckoutUrl() == null) {
-            throw new BusinessException("Mercado Pago no devolvió el identificador de orden y checkout_url", 502);
+            throw new RespuestaMercadoPagoException(
+                    "Mercado Pago no devolvió el identificador de orden y checkout_url");
         }
         if (response.getExternalReference() != null
                 && !request.getReservaId().toString().equals(response.getExternalReference())) {
-            throw new BusinessException("Mercado Pago devolvió una referencia externa inesperada", 502);
+            throw new RespuestaMercadoPagoException(
+                    "Mercado Pago devolvió una referencia externa inesperada");
         }
 
         pago.setMercadoPagoOrderId(response.getId());
@@ -84,13 +91,13 @@ public class PagoService {
 
         MercadoPagoResponseDTO orden = mercadoPagoClient.obtenerOrden(orderId);
         if (orden == null) {
-            throw new BusinessException("Mercado Pago no devolvió la orden", 502);
+            throw new RespuestaMercadoPagoException("Mercado Pago no devolvió la orden");
         }
 
         Pago pago = pagoRepository.findByMercadoPagoOrderId(orderId)
                 .orElseThrow(() -> {
                     log.warn("No se encontró pago para la orden: {}", orderId);
-                    return new BusinessException("Pago no encontrado", 404);
+                    return new PagoNoEncontradoException();
                 });
 
         if (!orden.tienePagoProcesado() || pago.getEstado() == EstadoPago.PAGADO) {
@@ -109,7 +116,7 @@ public class PagoService {
         Pago pago = pagoRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Pago no encontrado: {}", id);
-                    return new BusinessException("Pago no encontrado", 404);
+                    return new PagoNoEncontradoException();
                 });
 
         pago.setEstado(EstadoPago.CANCELADO);
