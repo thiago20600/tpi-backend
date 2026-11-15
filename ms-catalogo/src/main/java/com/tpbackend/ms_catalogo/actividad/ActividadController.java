@@ -78,7 +78,7 @@ public class ActividadController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Evaluar viento", description = "Evalua el viento de una actividad en un intervalo")
+    @Operation(summary = "Evaluar viento", description = "Evalua el viento de una actividad en un intervalo de tiempo")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Evaluacion exitosa"),
         @ApiResponse(responseCode = "400", description = "Intervalo invalido"),

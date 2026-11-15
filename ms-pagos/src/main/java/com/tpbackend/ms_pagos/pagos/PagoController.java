@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.tpbackend.ms_pagos.pagos.dto.PagoRequestDTO;
 import com.tpbackend.ms_pagos.pagos.dto.PagoResponseDTO;
+import io.swagger.v3.oas.annotations.Operation;
 
 import java.util.Map;
 import java.util.UUID;
@@ -23,6 +24,7 @@ public class PagoController {
 
     private final PagoService pagoService;
 
+    @Operation(summary = "Crear pago", description = "Crea un pago para una reserva")
     @PostMapping
     public ResponseEntity<PagoResponseDTO> crear(
             @Valid @RequestBody PagoRequestDTO request,
@@ -31,6 +33,7 @@ public class PagoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(pago));
     }
 
+    @Operation(summary = "Procesar webhook", description = "Procesa una notificacion de pago de Mercado Pago")
     @PostMapping("/webhook")
     public ResponseEntity<Void> webhook(
             @RequestBody Map<String, Object> payload,
@@ -47,6 +50,7 @@ public class PagoController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Cancelar pago", description = "Cancela un pago por su ID")
     @PostMapping("/{id}/cancelacion")
     public ResponseEntity<Void> cancelar(@PathVariable UUID id) {
         pagoService.cancelarPago(id);
