@@ -34,7 +34,7 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/reservas").hasRole("TURISTA") 
                 .requestMatchers(HttpMethod.GET, "/api/v1/reservas").hasAnyRole("PRESTADOR", "TURISTA") 
-                .requestMatchers(HttpMethod.GET, "/api/v1/reservas/*").hasRole("SERVICE")
+                .requestMatchers(HttpMethod.GET, "/api/v1/reservas/*").hasAnyRole("SERVICE", "TURISTA")
                 .requestMatchers(HttpMethod.POST, "/api/v1/reservas/*/cancelacion").hasRole("TURISTA")
                 .requestMatchers(HttpMethod.POST, "/api/v1/reservas/*/confirmacion").hasRole("SERVICE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/salidas").hasRole("PRESTADOR")
