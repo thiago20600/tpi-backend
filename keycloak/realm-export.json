@@ -34,25 +34,46 @@
   ],
   "users": [
     {
-      "username": "prestador thiago",
+      "username": "prestador1",
       "enabled": true,
-      "firstName": "Thiago",
+      "firstName": "Prestador1",
       "lastName": "Prestador",
-      "email": "prestador.thiago@example.com",
+      "email": "prestador1@example.com",
       "emailVerified": true,
       "requiredActions": [],
-      "credentials": [{"type": "password", "value": "prestadorthiago", "temporary": false}],
+      "credentials": [{"type": "password", "value": "prestador1", "temporary": false}],
       "realmRoles": ["PRESTADOR"]
     },
     {
-      "username": "turista thiago",
+      "username": "turista1",
       "enabled": true,
-      "firstName": "Thiago",
+      "firstName": "Turista1",
       "lastName": "Turista",
-      "email": "turista.thiago@example.com",
+      "email": "turista1@example.com",
       "emailVerified": true,
       "requiredActions": [],
-      "credentials": [{"type": "password", "value": "turistathiago", "temporary": false}],
+      "credentials": [{"type": "password", "value": "turista1", "temporary": false}],
+      "realmRoles": ["TURISTA"]
+    },    {
+      "username": "prestador2",
+      "enabled": true,
+      "firstName": "Prestador2",
+      "lastName": "Prestador",
+      "email": "prestador2@example.com",
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [{"type": "password", "value": "prestador2", "temporary": false}],
+      "realmRoles": ["PRESTADOR"]
+    },
+    {
+      "username": "turista2",
+      "enabled": true,
+      "firstName": "Turista2",
+      "lastName": "Turista",
+      "email": "turista2@example.com",
+      "emailVerified": true,
+      "requiredActions": [],
+      "credentials": [{"type": "password", "value": "turista2", "temporary": false}],
       "realmRoles": ["TURISTA"]
     },
     {
