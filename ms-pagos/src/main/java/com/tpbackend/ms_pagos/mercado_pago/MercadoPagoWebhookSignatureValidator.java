@@ -1,6 +1,11 @@
 package com.tpbackend.ms_pagos.mercado_pago;
 
-import com.tpbackend.BusinessException;
+import com.tpbackend.ms_pagos.mercado_pago.exceptions.MercadoPagoFirmaWebhookInvalidaException;
+import com.tpbackend.ms_pagos.mercado_pago.exceptions.MercadoPagoWebhookHeadersFaltantesException;
+import com.tpbackend.ms_pagos.mercado_pago.exceptions.MercadoPagoWebhookSecretNoConfiguradoException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +21,8 @@ import java.util.Map;
 @Component
 public class MercadoPagoWebhookSignatureValidator {
 
+    private static final Logger log = LoggerFactory.getLogger(MercadoPagoWebhookSignatureValidator.class);
+
     private final String webhookSecret;
 
     public MercadoPagoWebhookSignatureValidator(@Value("${mercadopago.webhook-secret:}") String webhookSecret) {
@@ -24,17 +31,20 @@ public class MercadoPagoWebhookSignatureValidator {
 
     public void validar(String orderId, String signature, String requestId) {
         if (webhookSecret == null || webhookSecret.isBlank()) {
-            throw new BusinessException("El secreto del webhook no está configurado", 503);
+            log.error("No está configurado el secreto del webhook de Mercado Pago");
+            throw new MercadoPagoWebhookSecretNoConfiguradoException();
         }
         if (signature == null || requestId == null || requestId.isBlank()) {
-            throw new BusinessException("Faltan encabezados de firma del webhook", 401);
+            log.warn("Webhook de Mercado Pago rechazado: faltan encabezados de firma");
+            throw new MercadoPagoWebhookHeadersFaltantesException();
         }
 
         Map<String, String> signatureValues = parseSignature(signature);
         String timestamp = signatureValues.get("ts");
         String receivedHash = signatureValues.get("v1");
         if (timestamp == null || receivedHash == null) {
-            throw new BusinessException("La firma del webhook es inválida", 401);
+            log.warn("Webhook de Mercado Pago rechazado: formato de firma inválido");
+            throw new MercadoPagoFirmaWebhookInvalidaException();
         }
 
         String manifest = "id:" + orderId.toLowerCase(Locale.ROOT)
@@ -44,8 +54,10 @@ public class MercadoPagoWebhookSignatureValidator {
         if (!MessageDigest.isEqual(
                 expectedHash.getBytes(StandardCharsets.US_ASCII),
                 receivedHash.getBytes(StandardCharsets.US_ASCII))) {
-            throw new BusinessException("La firma del webhook es inválida", 401);
+            log.warn("Webhook de Mercado Pago rechazado: firma no coincide para la orden {}", orderId);
+            throw new MercadoPagoFirmaWebhookInvalidaException();
         }
+        log.debug("Firma del webhook de Mercado Pago validada para la orden {}", orderId);
     }
 
     private Map<String, String> parseSignature(String signature) {
@@ -66,6 +78,7 @@ public class MercadoPagoWebhookSignatureValidator {
             byte[] hash = mac.doFinal(manifest.getBytes(StandardCharsets.UTF_8));
             return java.util.HexFormat.of().formatHex(hash);
         } catch (GeneralSecurityException exception) {
+            log.error("No se pudo calcular la firma HMAC del webhook", exception);
             throw new IllegalStateException("No se pudo calcular la firma HMAC del webhook", exception);
         }
     }

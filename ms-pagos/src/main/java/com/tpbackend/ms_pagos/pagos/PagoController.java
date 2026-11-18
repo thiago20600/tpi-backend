@@ -3,48 +3,48 @@ package com.tpbackend.ms_pagos.pagos;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import com.tpbackend.ms_pagos.mercado_pago.exceptions.NotificacionMercadoPagoSinOrdenException;
 import com.tpbackend.ms_pagos.pagos.dto.PagoRequestDTO;
 import com.tpbackend.ms_pagos.pagos.dto.PagoResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 
 import java.util.Map;
 import java.util.UUID;
-import com.tpbackend.BusinessException;
 
 @RestController
 @RequestMapping("/api/v1/pagos")
 @RequiredArgsConstructor
 public class PagoController {
 
+    private static final Logger log = LoggerFactory.getLogger(PagoController.class);
+
     private final PagoService pagoService;
 
     @Operation(summary = "Crear pago", description = "Crea un pago para una reserva")
     @PostMapping
-    public ResponseEntity<PagoResponseDTO> crear(
-            @Valid @RequestBody PagoRequestDTO request,
-            @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<PagoResponseDTO> crear(@Valid @RequestBody PagoRequestDTO request, @AuthenticationPrincipal Jwt jwt) {
         Pago pago = pagoService.crearPago(request, jwt);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(pago));
     }
 
     @Operation(summary = "Procesar webhook", description = "Procesa una notificacion de pago de Mercado Pago")
     @PostMapping("/webhook")
-    public ResponseEntity<Void> webhook(
-            @RequestBody Map<String, Object> payload,
-            @RequestHeader(value = "x-signature", required = false) String signature,
-            @RequestHeader(value = "x-request-id", required = false) String requestId) {
+    public ResponseEntity<Void> webhook(@RequestBody Map<String, Object> payload, @RequestHeader(value = "x-signature", required = false) String signature, @RequestHeader(value = "x-request-id", required = false) String requestId) {
         if (!"order".equalsIgnoreCase(String.valueOf(payload.get("type")))) {
             return ResponseEntity.ok().build();
         }
         Object data = payload.get("data");
         if (!(data instanceof Map<?, ?> dataMap) || dataMap.get("id") == null) {
-            throw new BusinessException("La notificación no contiene el ID de la orden", 400);
+            log.warn("Webhook de Mercado Pago rechazado: falta el ID de la orden");
+            throw new NotificacionMercadoPagoSinOrdenException();
         }
         pagoService.procesarWebhook(dataMap.get("id").toString(), signature, requestId);
         return ResponseEntity.ok().build();

@@ -1,5 +1,7 @@
 package com.tpbackend.ms_pagos.mercado_pago;
 
+import com.tpbackend.ms_pagos.mercado_pago.dto.MercadoPagoResponseDTO;
+import com.tpbackend.ms_pagos.mercado_pago.exceptions.MercadoPagoException;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -7,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-
-import com.tpbackend.ms_pagos.mercado_pago.dto.MercadoPagoResponseDTO;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,19 +43,36 @@ public class MercadoPagoClient {
                 ))
         );
 
-        return mercadoPagoRestClient.post()
-                .uri("/v1/orders")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("X-Idempotency-Key", idempotencyKey.toString())
-                .body(body)
-                .retrieve()
-                .body(MercadoPagoResponseDTO.class);
+        try {
+            return mercadoPagoRestClient.post()
+                    .uri("/v1/orders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Idempotency-Key", idempotencyKey.toString())
+                    .body(body)
+                    .retrieve()
+                    .body(MercadoPagoResponseDTO.class);
+        } catch (RestClientResponseException exception) {
+            log.error("Error al crear orden en Mercado Pago: {}", exception.getStatusCode());
+            throw new MercadoPagoException("Error al crear orden en Mercado Pago: " + exception.getStatusCode());
+        } catch (RestClientException exception) {
+            log.error("Error de comunicación con Mercado Pago: {}", exception.getMessage(), exception);
+            throw new MercadoPagoException("Error de comunicación con Mercado Pago");
+        }
     }
 
     public MercadoPagoResponseDTO obtenerOrden(String orderId) {
-        return mercadoPagoRestClient.get()
-                .uri("/v1/orders/{id}", orderId)
-                .retrieve()
-                .body(MercadoPagoResponseDTO.class);
+        log.info("Consultando orden de Mercado Pago: {}", orderId);
+        try {
+            return mercadoPagoRestClient.get()
+                    .uri("/v1/orders/{id}", orderId)
+                    .retrieve()
+                    .body(MercadoPagoResponseDTO.class);
+        } catch (RestClientResponseException exception) {
+            log.error("Error al consultar orden en Mercado Pago: {}", exception.getStatusCode());
+            throw new MercadoPagoException("Error al consultar orden en Mercado Pago: " + exception.getStatusCode());
+        } catch (RestClientException exception) {
+            log.error("Error de comunicación con Mercado Pago: {}", exception.getMessage(), exception);
+            throw new MercadoPagoException("Error de comunicación con Mercado Pago");
+        }
     }
 }

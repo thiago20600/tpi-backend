@@ -38,11 +38,14 @@ public class PagoService {
 
         String email = jwt.getClaimAsString("email");
         if (email == null || email.isBlank()) {
+            log.warn("El usuario no tiene un email configurado para crear el pago de la reserva {}",
+                    request.getReservaId());
             throw new EmailUsuarioNoConfiguradoException();
         }
 
         ReservaDTO reserva = reservaClient.obtenerReserva(request.getReservaId());
         if (!jwt.getSubject().equals(reserva.getTitularSub())) {
+            log.warn("El usuario no es titular de la reserva {}", request.getReservaId());
             throw new ReservaNoPerteneceUsuarioException();
         }
 
@@ -56,9 +59,11 @@ public class PagoService {
             return pago;
         }
         if (!"PENDIENTE_DE_PAGO".equals(reserva.getEstado())) {
+            log.warn("La reserva {} no está pendiente de pago", request.getReservaId());
             throw new ReservaNoPendientePagoException();
         }
         if (reserva.getMonto() == null || reserva.getMonto().signum() <= 0) {
+            log.warn("La reserva {} tiene un monto inválido", request.getReservaId());
             throw new MontoReservaInvalidoException();
         }
 
@@ -69,11 +74,15 @@ public class PagoService {
         MercadoPagoResponseDTO response = mercadoPagoClient.crearOrden(
                 request.getReservaId(), reserva.getMonto(), email, pago.getId());
         if (response == null || response.getId() == null || response.getCheckoutUrl() == null) {
+            log.error("Mercado Pago no devolvió el identificador de orden y checkout_url para la reserva {}",
+                    request.getReservaId());
             throw new RespuestaMercadoPagoException(
                     "Mercado Pago no devolvió el identificador de orden y checkout_url");
         }
         if (response.getExternalReference() != null
                 && !request.getReservaId().toString().equals(response.getExternalReference())) {
+            log.error("Mercado Pago devolvió una referencia externa inesperada para la reserva {}",
+                    request.getReservaId());
             throw new RespuestaMercadoPagoException(
                     "Mercado Pago devolvió una referencia externa inesperada");
         }
@@ -91,6 +100,7 @@ public class PagoService {
 
         MercadoPagoResponseDTO orden = mercadoPagoClient.obtenerOrden(orderId);
         if (orden == null) {
+            log.warn("Mercado Pago no devolvió la orden {}", orderId);
             throw new RespuestaMercadoPagoException("Mercado Pago no devolvió la orden");
         }
 
