@@ -205,7 +205,7 @@ public class SalidaService {
         }
 
         if (salida.getEstado() != EstadoSalida.PROGRAMADA) {
-            log.warn("La salida {} no esta programada (estado: {})", id, salida.getEstado());
+            log.info("La salida {} no esta programada (estado: {})", id, salida.getEstado());
             throw new SalidaNoProgramadaException();
         }
 
@@ -213,9 +213,15 @@ public class SalidaService {
                 salida.getActividadId(), salida.getInicio(), salida.getFin(), token);
 
         if ("SUPERA_UMBRAL".equals(evaluacion.getResultado())) {
-            salida.setEstado(EstadoSalida.SUSPENDIDA);
-            salidaRepository.save(salida);
-            log.warn("La salida {} fue suspendida por viento", id);
+            boolean faltaUnDiaOMenos = !LocalDateTime.now().isBefore(salida.getInicio().minusDays(1));
+
+            if (faltaUnDiaOMenos) {
+                salida.setEstado(EstadoSalida.SUSPENDIDA);
+                salidaRepository.save(salida);
+                log.info("La salida {} fue suspendida por viento excesivo", id);
+            } else {
+                log.info("La salida {} supero el umbral de viento pero falta mas de un dia", id);
+            }
         }
 
         return mapToResponse(salida);
