@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 
-import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Salidas")
@@ -41,19 +41,20 @@ public class SalidaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+
     @Operation(summary = "Listar salidas", description = "Lista las salidas segun el rol del usuario autenticado")
     @GetMapping
-    public ResponseEntity<Page<SalidaResponseDTO>> listar(@RequestParam(required = false) UUID actividadId, @AuthenticationPrincipal Jwt jwt, @ParameterObject Pageable pageable) {
-        String sub = jwt.getSubject();
-        List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
+    public ResponseEntity<Page<SalidaResponseDTO>> listar(@RequestParam(required = false) UUID actividadId,
+        @AuthenticationPrincipal Jwt jwt,
+        Authentication authentication,
+        @ParameterObject Pageable pageable) {
 
-        String rolPrincipal = (roles != null && !roles.isEmpty()) ? roles.get(0) : "TURISTA";
+        boolean esPrestador = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_PRESTADOR"));
 
-        Page<SalidaResponseDTO> response = switch (rolPrincipal) {
-            case "PRESTADOR" -> salidaService.listarPorPrestador(sub, actividadId, pageable);
-            case "TURISTA" -> salidaService.listarProgramadas(actividadId, pageable);
-            default -> salidaService.listarProgramadas(actividadId, pageable);
-        };
+        Page<SalidaResponseDTO> response = esPrestador
+            ? salidaService.listarPorPrestador(jwt.getSubject(), actividadId, pageable)
+            : salidaService.listarProgramadas(actividadId, pageable);
 
         return ResponseEntity.ok(response);
     }

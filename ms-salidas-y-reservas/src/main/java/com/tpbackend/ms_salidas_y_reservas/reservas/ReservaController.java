@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 
-import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Reservas")
@@ -41,20 +41,22 @@ public class ReservaController {
 
     @Operation(summary = "Listar reservas", description = "Lista las reservas del usuario autenticado segun su rol")
     @GetMapping
-    public ResponseEntity<Page<ReservaResponseDTO>> listarReservas(@AuthenticationPrincipal Jwt jwt, @ParameterObject Pageable pageable) {
+    public ResponseEntity<Page<ReservaResponseDTO>> listarReservas(@AuthenticationPrincipal Jwt jwt,
+        Authentication authentication,
+        @ParameterObject Pageable pageable) {
+
         String sub = jwt.getSubject();
-        List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
 
-        String rolPrincipal = (roles != null && !roles.isEmpty()) ? roles.get(0) : "TURISTA";
+        boolean esPrestador = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_PRESTADOR"));
 
-        Page<ReservaResponseDTO> response = switch (rolPrincipal) {
-            case "PRESTADOR" -> reservaService.listarPorPrestador(sub, pageable);
-            case "TURISTA" -> reservaService.listarPorTitular(sub, pageable);
-            default -> reservaService.listarPorTitular(sub, pageable);
-        };
+        Page<ReservaResponseDTO> response = esPrestador
+            ? reservaService.listarPorPrestador(sub, pageable)
+            : reservaService.listarPorTitular(sub, pageable);
 
         return ResponseEntity.ok(response);
     }
+
 
     @Operation(summary = "Obtener reserva por ID", description = "Obtiene una reserva por ID para consultas internas")
     @GetMapping("/{id}")

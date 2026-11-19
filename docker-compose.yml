@@ -65,9 +65,7 @@ services:
       - red-datos
 
   ms-pagos:
-    build:
-      context: ./ms-pagos
-      dockerfile: dockerfile
+    build: ./ms-pagos
     container_name: ms-pagos
     environment:
       - PAGOS_DB_URL=${PAGOS_DB_URL}
@@ -169,9 +167,7 @@ services:
       - loki
     
   api-gateway:
-    build:
-      context: ./gateway
-      dockerfile: Dockerfile
+    build: ./gateway
     container_name: api-gateway
     environment:
       - KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
@@ -199,9 +195,7 @@ services:
       - red-aplicacion
 
   ms-salidas-y-reservas:
-    build:
-      context: ./ms-salidas-y-reservas
-      dockerfile: Dockerfile
+    build: ./ms-salidas-y-reservas
     container_name: ms-salidas-y-reservas
     environment:
       - SALIDAS_DB_URL=${SALIDAS_DB_URL}
