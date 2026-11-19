@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 
-import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Salidas")
@@ -43,17 +43,17 @@ public class SalidaController {
 
     @Operation(summary = "Listar salidas", description = "Lista las salidas segun el rol del usuario autenticado")
     @GetMapping
-    public ResponseEntity<Page<SalidaResponseDTO>> listar(@RequestParam(required = false) UUID actividadId, @AuthenticationPrincipal Jwt jwt, @ParameterObject Pageable pageable) {
-        String sub = jwt.getSubject();
-        List<String> roles = jwt.getClaimAsStringList("realm_access.roles");
+    public ResponseEntity<Page<SalidaResponseDTO>> listar(@RequestParam(required = false) UUID actividadId,
+        @AuthenticationPrincipal Jwt jwt,
+        Authentication authentication,
+        @ParameterObject Pageable pageable) {
 
-        String rolPrincipal = (roles != null && !roles.isEmpty()) ? roles.get(0) : "TURISTA";
+        boolean esPrestador = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_PRESTADOR"));
 
-        Page<SalidaResponseDTO> response = switch (rolPrincipal) {
-            case "PRESTADOR" -> salidaService.listarPorPrestador(sub, actividadId, pageable);
-            case "TURISTA" -> salidaService.listarProgramadas(actividadId, pageable);
-            default -> salidaService.listarProgramadas(actividadId, pageable);
-        };
+        Page<SalidaResponseDTO> response = esPrestador
+            ? salidaService.listarPorPrestador(jwt.getSubject(), actividadId, pageable)
+            : salidaService.listarProgramadas(actividadId, pageable);
 
         return ResponseEntity.ok(response);
     }
@@ -66,7 +66,7 @@ public class SalidaController {
     }
 
     @Operation(summary = "Suspender salida", description = "Suspende una salida propia")
-    @PostMapping("/{id}/suspension")
+    @PostMapping("/{id}/suspender")
     public ResponseEntity<SalidaResponseDTO> suspender(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         String prestadorSub = jwt.getSubject();
         SalidaResponseDTO response = salidaService.suspender(id, prestadorSub);
@@ -74,7 +74,7 @@ public class SalidaController {
     }
 
     @Operation(summary = "Iniciar salida", description = "Inicia una salida propia")
-    @PostMapping("/{id}/inicio")
+    @PostMapping("/{id}/iniciar")
     public ResponseEntity<SalidaResponseDTO> iniciarSalida(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         String prestadorSub = jwt.getSubject();
         SalidaResponseDTO response = salidaService.iniciarSalida(id, prestadorSub);
@@ -82,7 +82,7 @@ public class SalidaController {
     }
 
     @Operation(summary = "Finalizar salida", description = "Finaliza una salida propia")
-    @PostMapping("/{id}/finalizacion")
+    @PostMapping("/{id}/finalizar")
     public ResponseEntity<SalidaResponseDTO> finalizarSalida(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
         String prestadorSub = jwt.getSubject();
         SalidaResponseDTO response = salidaService.finalizarSalida(id, prestadorSub);
