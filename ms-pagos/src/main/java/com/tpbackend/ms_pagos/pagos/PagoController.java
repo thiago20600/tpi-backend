@@ -17,7 +17,6 @@ import com.tpbackend.ms_pagos.pagos.dto.PagoResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/pagos")
@@ -47,13 +46,6 @@ public class PagoController {
             throw new NotificacionMercadoPagoSinOrdenException();
         }
         pagoService.procesarWebhook(dataMap.get("id").toString(), signature, requestId);
-        return ResponseEntity.ok().build();
-    }
-
-    @Operation(summary = "Cancelar pago", description = "Cancela un pago por su ID")
-    @PostMapping("/{id}/cancelacion")
-    public ResponseEntity<Void> cancelar(@PathVariable UUID id) {
-        pagoService.cancelarPago(id);
         return ResponseEntity.ok().build();
     }
 
